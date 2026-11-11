@@ -2,13 +2,34 @@
 
 Outputs:
   ../../index.html                 full HTML document (site home page)
-  argv[1] (optional)               page fragment for publishing as a Claude artifact
+  --fragment PATH (optional)       page fragment for publishing as a Claude artifact
+
+Refresh the Points of Presence from the quoting plugin's master list with
+  --pops path/to/points_of_presence.yaml   (needs PyYAML; rewrites data/pops.json)
 """
-import base64, glob, io, json, math, os, sys
+import argparse, base64, glob, io, json, math, os, sys
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(HERE, "data")
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--fragment")
+ap.add_argument("--pops")
+args = ap.parse_args()
+
+POP_FIELDS = ["id", "name", "region", "state", "postcode", "lat", "lng",
+              "casual_level", "sla_committed_bh", "sla_stretch", "stretch_condition"]
+if args.pops:
+    import yaml
+    src = yaml.safe_load(open(args.pops))
+    meta = src.get("metadata", {})
+    pops = {"version": meta.get("version"), "effective_date": str(meta.get("effective_date", "")),
+            "metro_km": meta.get("metro_threshold_road_km", 50), "regional_km": meta.get("regional_threshold_road_km", 150),
+            "points": [{k: x.get(k) for k in POP_FIELDS} for x in src["points_of_presence"]]}
+    json.dump(pops, open(os.path.join(D, "pops.json"), "w"), indent=1)
+    print("refreshed data/pops.json:", len(pops["points"]), "PoPs, version", pops["version"])
+pops = json.load(open(os.path.join(D, "pops.json")))
 
 CODES = {"Western Australia": "WA", "Northern Territory": "NT", "South Australia": "SA", "Queensland": "QLD",
          "New South Wales": "NSW", "Victoria": "VIC", "Tasmania": "TAS", "Australian Capital Territory": "ACT"}
@@ -43,7 +64,8 @@ page = (page.replace("/*__MAPLIBRE_CSS__*/", open(os.path.join(D, "maplibre-gl.c
             .replace("/*__STATES__*/", json.dumps(states, separators=(",", ":")))
             .replace("/*__CITIES__*/", json.dumps(cities, separators=(",", ":")))
             .replace("/*__DEM__*/", json.dumps(dem, separators=(",", ":")))
-            .replace("/*__FLAT__*/", flat))
+            .replace("/*__FLAT__*/", flat)
+            .replace("/*__POPS__*/", json.dumps(pops, separators=(",", ":"))))
 
 full = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
@@ -52,6 +74,6 @@ full = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
 out = os.path.join(HERE, "..", "..", "index.html")
 open(out, "w").write(full)
 print("wrote", os.path.normpath(out), len(full) // 1024, "KB;", len(cities), "towns;", len(dem), "elevation tiles")
-if len(sys.argv) > 1:
-    open(sys.argv[1], "w").write(page)
-    print("wrote", sys.argv[1])
+if args.fragment:
+    open(args.fragment, "w").write(page)
+    print("wrote", args.fragment)

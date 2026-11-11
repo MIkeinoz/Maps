@@ -12,8 +12,13 @@
   --fg: #1d2326;
   --muted: #5d6b70;
   --line: #d9d5cc;
-  --accent: #c2471d;        /* survey-flag orange */
+  --accent: #2b4acb;        /* your pins and actions: survey blue */
   --accent-ink: #ffffff;
+  --pop-high: #1e8a4a;      /* casual availability: High / Medium / Low */
+  --pop-med: #d38b00;
+  --pop-low: #c2362f;
+  --pop-ink: #ffffff;
+  --ring: #1e4f6b;
   --field: #ffffff;
   --sea: #b9d3dc;
   --land: #e7c9a0;
@@ -28,7 +33,8 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #12171a; --panel: #182024; --fg: #e6e9e7; --muted: #93a1a6; --line: #2c373c;
-    --accent: #f07a45; --accent-ink: #1a0f08; --field: #0f1416;
+    --accent: #8aa2ff; --accent-ink: #0b1230;
+    --pop-high: #4cc27a; --pop-med: #f2b630; --pop-low: #ff7b72; --pop-ink: #0b0f10; --ring: #9fd3ff; --field: #0f1416;
     --sea: #0e2a36; --land: #6b4a30; --border-line: #e9c49a; --hill-shadow: #0a0604;
     --warn: #ffd27a; --warn-bg: #3a2c0c;
     color-scheme: dark;
@@ -36,7 +42,8 @@
 }
 :root[data-theme="dark"] {
   --bg: #12171a; --panel: #182024; --fg: #e6e9e7; --muted: #93a1a6; --line: #2c373c;
-  --accent: #f07a45; --accent-ink: #1a0f08; --field: #0f1416;
+  --accent: #8aa2ff; --accent-ink: #0b1230;
+    --pop-high: #4cc27a; --pop-med: #f2b630; --pop-low: #ff7b72; --pop-ink: #0b0f10; --ring: #9fd3ff; --field: #0f1416;
   --sea: #0e2a36; --land: #6b4a30; --border-line: #e9c49a; --hill-shadow: #0a0604;
   --warn: #ffd27a; --warn-bg: #3a2c0c;
   color-scheme: dark;
@@ -101,6 +108,25 @@ select { background: var(--field); border: 1px solid var(--line); border-radius:
 .switch input { accent-color: var(--accent); width: 16px; height: 16px; }
 input[type="range"] { accent-color: var(--accent); }
 
+.legend { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
+.lv { display: grid !important; grid-template-columns: 16px 14px 1fr auto; column-gap: 8px; align-items: center; padding: 5px 0; }
+.lv small { grid-column: 3 / 5; color: var(--muted); font-size: 12px; }
+.lv .n { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.sw { display: inline-block; width: 12px; height: 12px; transform: rotate(45deg); border: 1.5px solid var(--pop-ink); flex: none; }
+.sw.high, .pop-mk.high .dia { background: var(--pop-high); }
+.sw.med, .pop-mk.med .dia { background: var(--pop-med); }
+.sw.low, .pop-mk.low .dia { background: var(--pop-low); }
+.pin-near { font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+.pin-near .sw { width: 8px; height: 8px; border-width: 1px; }
+.band { font-weight: 600; color: var(--fg); }
+.pop-mk { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.pop-mk .dia { width: 13px; height: 13px; transform: rotate(45deg); border: 2px solid var(--pop-ink); box-shadow: 0 1px 3px rgb(0 0 0 / .4); flex: none; }
+.pop-mk .nm { display: none; font: 600 11.5px var(--font-body); color: var(--fg); text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel), 0 0 2px var(--panel); white-space: nowrap; }
+#map.pop-labels .pop-mk .nm { display: block; }
+.chip { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; border-radius: 10px; color: var(--pop-ink); }
+.chip.high { background: var(--pop-high); } .chip.med { background: var(--pop-med); } .chip.low { background: var(--pop-low); }
+.pop dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 8px 0; font-size: 12.5px; }
+.pop dt { color: var(--muted); } .pop dd { margin: 0; }
 .credits { color: var(--muted); font-size: 11.5px; line-height: 1.5; margin-top: auto; }
 
 /* Map overlays */
@@ -153,7 +179,7 @@ input[type="range"] { accent-color: var(--accent); }
   <aside class="panel" aria-label="Pin controls">
     <header>
       <h1>Australia Pin Map</h1>
-      <p class="sub">Paste GPS coordinates to drop pins on a 3D terrain map. Drag to pan, scroll or pinch to zoom, right-drag or two-finger drag to tilt and rotate.</p>
+      <p class="sub">Paste GPS coordinates to drop pins on a 3D terrain map and see the nearest Green Light Point of Presence. Drag to pan, scroll or pinch to zoom, right-drag or two-finger drag to tilt and rotate.</p>
     </header>
 
     <section>
@@ -185,6 +211,18 @@ input[type="range"] { accent-color: var(--accent); }
     </section>
 
     <section>
+      <p class="label"><span>Points of Presence</span><span class="count" id="popCount"></span></p>
+      <div class="legend" id="legend"></div>
+      <div class="view-grid">
+        <label class="switch" for="popShow"><input type="checkbox" id="popShow" checked> PoP markers</label>
+        <label class="switch" for="popLabels"><input type="checkbox" id="popLabels"> Always label</label>
+        <label class="switch" for="ringMetro"><input type="checkbox" id="ringMetro" checked> <span id="metroLbl">Metro rings</span></label>
+        <label class="switch" for="ringRegional"><input type="checkbox" id="ringRegional" checked> <span id="regLbl">Regional rings</span></label>
+      </div>
+      <p class="hint" id="popHint"></p>
+    </section>
+
+    <section>
       <p class="label"><span>View</span></p>
       <div class="view-grid">
         <label class="switch" for="t3d"><input type="checkbox" id="t3d" checked> 3D terrain</label>
@@ -201,7 +239,7 @@ input[type="range"] { accent-color: var(--accent); }
       <p class="hint">Heights are exaggerated so the low Australian relief shows up. Streets and satellite load from the internet and need the page opened outside the Claude preview.</p>
     </section>
 
-    <p class="credits">Boundaries and towns: Natural Earth (public domain). Elevation: Mapzen Terrarium tiles via AWS Open Data, about 2.4 km per pixel at full detail.</p>
+    <p class="credits">Points of Presence: Green Light Priority 1 PoP master list (quoting plugin). Boundaries and towns: Natural Earth (public domain). Elevation: Mapzen Terrarium tiles via AWS Open Data, about 2.4 km per pixel at full detail.</p>
   </aside>
 
   <main class="map-wrap">
@@ -222,6 +260,7 @@ const STATES = /*__STATES__*/;
 const CITIES = /*__CITIES__*/;
 const DEM = /*__DEM__*/;
 const FLAT_TILE = "/*__FLAT__*/";
+const POPS = /*__POPS__*/;
 </script>
 <script>
 (function () {
@@ -373,6 +412,8 @@ const FLAT_TILE = "/*__FLAT__*/";
     map.setPaintProperty("borders", "line-color", css("--border-line"));
     map.setPaintProperty("coast", "line-color", css("--border-line"));
     pins.forEach((p) => p.marker && paintMarker(p));
+    if (map.getLayer("ring-metro-fill")) ["ring-regional-fill", "ring-regional-line", "ring-metro-fill", "ring-metro-line"].forEach((id) =>
+      map.setPaintProperty(id, id.endsWith("fill") ? "fill-color" : "line-color", css("--ring")));
   }
   try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyMapTheme); } catch (e) {}
   new MutationObserver(applyMapTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
@@ -424,6 +465,111 @@ const FLAT_TILE = "/*__FLAT__*/";
   $("tCities").addEventListener("change", updateCities);
   map.on("zoomend", updateCities);
 
+  // ---------- Points of Presence ----------
+  const LV = { High: "high", Medium: "med", Low: "low" };
+  const LEVELS = ["High", "Medium", "Low"];
+  const METRO_KM = POPS.metro_km || 50, REG_KM = POPS.regional_km || 150;
+  const popOn = { High: true, Medium: true, Low: true };
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const r = Math.PI / 180, dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLon / 2) ** 2;
+    return 12742 * Math.asin(Math.sqrt(h));
+  }
+  function nearestPop(lat, lon) {
+    let best = null, bestKm = Infinity;
+    POPS.points.forEach((p) => { const d = haversineKm(lat, lon, p.lat, p.lng); if (d < bestKm) { bestKm = d; best = p; } });
+    if (!best) return null;
+    const band = bestKm <= METRO_KM ? "Metro" : bestKm <= REG_KM ? "Regional" : "Remote";
+    return { pop: best, km: bestKm, band };
+  }
+  function ringPolygon(lat, lng, km) {
+    const R = 6371, d = km / R, la = lat * Math.PI / 180, lo = lng * Math.PI / 180, ring = [];
+    for (let i = 0; i <= 96; i++) {
+      const b = (i / 96) * 2 * Math.PI;
+      const la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(b));
+      const lo2 = lo + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2));
+      ring.push([+(lo2 * 180 / Math.PI).toFixed(4), +(la2 * 180 / Math.PI).toFixed(4)]);
+    }
+    return ring;
+  }
+  const ringData = { type: "FeatureCollection", features: [] };
+  POPS.points.forEach((p) => {
+    [["metro", METRO_KM], ["regional", REG_KM]].forEach(([kind, km]) => ringData.features.push({
+      type: "Feature", properties: { kind, level: p.casual_level }, geometry: { type: "Polygon", coordinates: [ringPolygon(p.lat, p.lng, km)] } }));
+  });
+
+  function slaSummary(level) {
+    const ps = POPS.points.filter((p) => p.casual_level === level);
+    const c = [...new Set(ps.map((p) => p.sla_committed_bh))].join("/");
+    const st = [...new Set(ps.map((p) => p.sla_stretch || "none"))].join("/");
+    return { n: ps.length, text: `${c} committed (business hours) · stretch ${st === "none" ? "none" : st}` };
+  }
+  function renderLegend() {
+    $("legend").innerHTML = LEVELS.map((l) => {
+      const s = slaSummary(l);
+      return `<label class="switch lv" for="lv${l}"><input type="checkbox" id="lv${l}" ${popOn[l] ? "checked" : ""}><i class="sw ${LV[l]}"></i><span>${l} casual availability</span><span class="n">${s.n}</span><small>${esc(s.text)}</small></label>`;
+    }).join("");
+    $("popCount").textContent = POPS.points.length;
+    $("metroLbl").textContent = `Metro rings (${METRO_KM} km)`;
+    $("regLbl").textContent = `Regional rings (${REG_KM} km)`;
+    $("popHint").textContent = `Rings are straight-line distances. The quoting plugin's Metro and Regional bands use road km, so real coverage is smaller than the rings show. The same straight-line rule sets the band shown for each of your pins. PoP list version ${POPS.version || "?"}, effective ${POPS.effective_date || "?"}.`;
+    LEVELS.forEach((l) => $("lv" + l).addEventListener("change", (e) => { popOn[l] = e.target.checked; applyPopFilter(); }));
+  }
+
+  function popPopupHtml(p) {
+    return `<div class="pop"><h3>${esc(p.name)}</h3>
+      <div>${esc(p.region)}, ${esc(p.state)} ${esc(p.postcode || "")}</div>
+      <dl>
+        <dt>Casual availability</dt><dd><span class="chip ${LV[p.casual_level]}">${esc(p.casual_level)}</span></dd>
+        <dt>Committed SLA</dt><dd>${esc(p.sla_committed_bh)} (business hours)</dd>
+        <dt>Stretch SLA</dt><dd>${p.sla_stretch ? esc(p.sla_stretch) : "None"}</dd>
+        <dt>Stretch rule</dt><dd>${esc(p.stretch_condition || "")}</dd>
+        <dt>Location</dt><dd class="pin-coord">${fmtDec(p.lat, p.lng)}</dd>
+      </dl>
+      <div class="hint" style="margin:0">PoP ID ${esc(p.id)}</div></div>`;
+  }
+  const popMarkers = POPS.points.map((p) => {
+    const el = document.createElement("div");
+    el.className = "pop-mk " + LV[p.casual_level];
+    el.setAttribute("role", "button");
+    el.setAttribute("aria-label", `${p.name} PoP, ${p.casual_level} casual availability`);
+    el.innerHTML = `<span class="dia"></span><span class="nm">${esc(p.name)}</span>`;
+    const mk = new maplibregl.Marker({ element: el, anchor: "left", offset: [-8, 0] })
+      .setLngLat([p.lng, p.lat]).setPopup(new maplibregl.Popup({ offset: 12, maxWidth: "300px" }).setHTML(popPopupHtml(p)));
+    return { p, mk, on: false };
+  });
+
+  function applyPopFilter() {
+    const show = $("popShow").checked;
+    popMarkers.forEach((m) => {
+      const vis = show && popOn[m.p.casual_level];
+      if (vis && !m.on) { m.mk.addTo(map); m.on = true; } else if (!vis && m.on) { m.mk.remove(); m.on = false; }
+    });
+    if (!map.getLayer("ring-metro-fill")) return;
+    const lv = ["in", ["get", "level"], ["literal", LEVELS.filter((l) => popOn[l])]];
+    [["metro", "ringMetro"], ["regional", "ringRegional"]].forEach(([kind, id]) => {
+      const vis = $(id).checked ? "visible" : "none";
+      ["fill", "line"].forEach((t) => {
+        map.setFilter(`ring-${kind}-${t}`, ["all", ["==", ["get", "kind"], kind], lv]);
+        map.setLayoutProperty(`ring-${kind}-${t}`, "visibility", vis);
+      });
+    });
+  }
+  function updatePopLabels() { $("map").classList.toggle("pop-labels", $("popLabels").checked || map.getZoom() >= 5.6); }
+  ["popShow", "ringMetro", "ringRegional"].forEach((id) => $(id).addEventListener("change", applyPopFilter));
+  $("popLabels").addEventListener("change", updatePopLabels);
+  map.on("zoom", updatePopLabels);
+
+  function addRingLayers() {
+    map.addSource("rings", { type: "geojson", data: ringData });
+    const col = css("--ring");
+    map.addLayer({ id: "ring-regional-fill", type: "fill", source: "rings", paint: { "fill-color": col, "fill-opacity": 0.05 } });
+    map.addLayer({ id: "ring-regional-line", type: "line", source: "rings", paint: { "line-color": col, "line-opacity": 0.45, "line-width": 1, "line-dasharray": [2, 2] } });
+    map.addLayer({ id: "ring-metro-fill", type: "fill", source: "rings", paint: { "fill-color": col, "fill-opacity": 0.13 } });
+    map.addLayer({ id: "ring-metro-line", type: "line", source: "rings", paint: { "line-color": col, "line-opacity": 0.7, "line-width": 1.2 } });
+  }
+
   // ---------- Pins ----------
   function pinSvg(n) {
     const fill = css("--accent"), ink = css("--accent-ink");
@@ -431,10 +577,15 @@ const FLAT_TILE = "/*__FLAT__*/";
   }
   function paintMarker(p) { p.marker.getElement().innerHTML = pinSvg(pins.indexOf(p) + 1); }
 
+  function nearHtml(p) {
+    const n = nearestPop(p.lat, p.lon); if (!n) return "";
+    return `<div class="pin-near"><i class="sw ${LV[n.pop.casual_level]}"></i><span>Nearest PoP ${esc(n.pop.name)} · ${n.km < 10 ? n.km.toFixed(1) : Math.round(n.km)} km · <span class="band">${n.band}</span></span></div>`;
+  }
   function popupHtml(p) {
     const gm = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}`;
     return `<div class="pop"><h3>${esc(p.label || "Unnamed pin")}</h3>
       <div class="pin-coord">${fmtDec(p.lat, p.lon)}<br>${fmtDms(p.lat, p.lon)}</div>
+      <div style="margin:-2px 0 8px">${nearHtml(p)}</div>
       <div class="row"><button class="btn small" type="button" data-copy="${p.id}">Copy coordinates</button>
       <a href="${gm}" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div>`;
   }
@@ -460,6 +611,7 @@ const FLAT_TILE = "/*__FLAT__*/";
         <div class="pin-body" data-fly="${p.id}" title="Fly to this pin">
           <div class="pin-name">${esc(p.label || "Unnamed pin")}${p.example ? '<span class="tag">Example</span>' : ""}</div>
           <div class="pin-coord">${fmtDec(p.lat, p.lon)}</div>
+          ${nearHtml(p)}
         </div>
         <button class="icon-btn" type="button" data-edit="${p.id}" aria-label="Rename ${esc(p.label || "pin")}" title="Rename">✎</button>
         <button class="icon-btn" type="button" data-del="${p.id}" aria-label="Remove ${esc(p.label || "pin")}">✕</button>
@@ -561,14 +713,17 @@ const FLAT_TILE = "/*__FLAT__*/";
   });
 
   $("copyBtn").addEventListener("click", () => {
-    const csv = "label,latitude,longitude\n" + pins.map((p) => `"${(p.label || "").replace(/"/g, '""')}",${p.lat},${p.lon}`).join("\n");
+    const csv = "label,latitude,longitude,nearest_pop,casual_availability,straight_line_km,band\n" + pins.map((p) => {
+      const n = nearestPop(p.lat, p.lon);
+      return `"${(p.label || "").replace(/"/g, '""')}",${p.lat},${p.lon},"${n ? n.pop.name : ""}",${n ? n.pop.casual_level : ""},${n ? n.km.toFixed(1) : ""},${n ? n.band : ""}`;
+    }).join("\n");
     copyText(csv, () => toast(`Copied ${pins.length} pin${pins.length === 1 ? "" : "s"} as CSV`));
   });
 
   // ---------- Map clicks & readout ----------
   let pending = null;
   map.on("click", (e) => {
-    if (e.originalEvent.target.closest && e.originalEvent.target.closest(".pin-marker")) return;
+    if (e.originalEvent.target.closest && e.originalEvent.target.closest(".pin-marker, .pop-mk")) return;
     pending = e.lngLat;
     $("dropCoord").textContent = fmtDec(pending.lat, pending.lng);
     $("dropCard").hidden = false;
@@ -592,7 +747,10 @@ const FLAT_TILE = "/*__FLAT__*/";
 
   // ---------- Boot ----------
   map.on("load", () => {
+    addRingLayers();
     applyMapTheme();
+    applyPopFilter();
+    updatePopLabels();
     set3D(true, false);
     map.jumpTo({ pitch: 50 });
     pins.forEach(addMarker);
@@ -600,6 +758,7 @@ const FLAT_TILE = "/*__FLAT__*/";
     updateCities();
     zoomTxt();
   });
+  renderLegend();
   renderList();
 })();
 </script>
