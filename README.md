@@ -22,6 +22,10 @@ python3 tools/australia-map/build.py [--fragment artifact.html] [--pops path/to/
 
 Needs Python 3 with Pillow (and PyYAML for `--pops`). `--pops` refreshes `data/pops.json` from the quoting plugin's `shared/points_of_presence.yaml`. Edit `tools/australia-map/template.html`, then rebuild.
 
+## Upload a site list
+
+Use **Upload Excel site list** (or drop a file on the page) to plot many sites at once. Default columns: A = site name, B = longitude, C = latitude; a header row is skipped and the columns, sheet and name column can be changed after loading. Accepts .xlsx, .xlsm, .xls and .csv; decimal degrees or DMS text. Rows with latitude and longitude the wrong way round are swapped, and rows without valid coordinates are listed as skipped. Each site gets its nearest PoP, straight-line distance and Metro / Regional / Remote band, colour-coded by band or by the PoP's casual availability, and **Copy with nearest PoP** copies the results as CSV. The file is read in the browser (SheetJS 0.18.5 from cdnjs) and never uploaded; the last list is remembered in that browser only.
+
 ## Points of Presence
 
 The 65 Green Light Priority 1 PoPs (quoting plugin master list, v3.0, effective 2026-09-26) are drawn as diamonds coloured by casual availability: green High (4hr committed, 2hr stretch), amber Medium (NBD committed, 4hr stretch), red Low (NBD committed, no stretch). Rings show the Metro (50 km) and Regional (150 km) thresholds as straight-line distances; the plugin's thresholds are road km, so real coverage is smaller. Each pin lists its nearest PoP, the straight-line distance and the Metro / Regional / Remote band, and Copy as CSV includes them.

@@ -19,6 +19,9 @@
   --pop-low: #c2362f;
   --pop-ink: #ffffff;
   --ring: #1e4f6b;
+  --band-metro: #2b6fd6;    /* uploaded sites by distance band */
+  --band-reg: #0f9fa8;
+  --band-remote: #b5179e;
   --field: #ffffff;
   --sea: #b9d3dc;
   --land: #e7c9a0;
@@ -34,7 +37,8 @@
   :root:not([data-theme="light"]) {
     --bg: #12171a; --panel: #182024; --fg: #e6e9e7; --muted: #93a1a6; --line: #2c373c;
     --accent: #8aa2ff; --accent-ink: #0b1230;
-    --pop-high: #4cc27a; --pop-med: #f2b630; --pop-low: #ff7b72; --pop-ink: #0b0f10; --ring: #9fd3ff; --field: #0f1416;
+    --pop-high: #4cc27a; --pop-med: #f2b630; --pop-low: #ff7b72; --pop-ink: #0b0f10; --ring: #9fd3ff;
+    --band-metro: #7fb0ff; --band-reg: #3fd0d8; --band-remote: #f46fd9; --field: #0f1416;
     --sea: #0e2a36; --land: #6b4a30; --border-line: #e9c49a; --hill-shadow: #0a0604;
     --warn: #ffd27a; --warn-bg: #3a2c0c;
     color-scheme: dark;
@@ -43,7 +47,8 @@
 :root[data-theme="dark"] {
   --bg: #12171a; --panel: #182024; --fg: #e6e9e7; --muted: #93a1a6; --line: #2c373c;
   --accent: #8aa2ff; --accent-ink: #0b1230;
-    --pop-high: #4cc27a; --pop-med: #f2b630; --pop-low: #ff7b72; --pop-ink: #0b0f10; --ring: #9fd3ff; --field: #0f1416;
+    --pop-high: #4cc27a; --pop-med: #f2b630; --pop-low: #ff7b72; --pop-ink: #0b0f10; --ring: #9fd3ff;
+    --band-metro: #7fb0ff; --band-reg: #3fd0d8; --band-remote: #f46fd9; --field: #0f1416;
   --sea: #0e2a36; --land: #6b4a30; --border-line: #e9c49a; --hill-shadow: #0a0604;
   --warn: #ffd27a; --warn-bg: #3a2c0c;
   color-scheme: dark;
@@ -127,6 +132,27 @@ input[type="range"] { accent-color: var(--accent); }
 .chip.high { background: var(--pop-high); } .chip.med { background: var(--pop-med); } .chip.low { background: var(--pop-low); }
 .pop dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 8px 0; font-size: 12.5px; }
 .pop dt { color: var(--muted); } .pop dd { margin: 0; }
+.drop { border: 1.5px dashed var(--line); border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.drop span { color: var(--muted); font-size: 12.5px; }
+.col-map { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.col-map label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--muted); min-width: 0; }
+.col-map select { padding: 4px 6px; font-size: 12.5px; }
+.file-name { font-weight: 600; overflow-wrap: anywhere; }
+.bands { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.bchip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 2px 9px 2px 6px; font-size: 12px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--panel); box-shadow: 0 0 0 1px var(--line); flex: none; display: inline-block; }
+.dot.metro { background: var(--band-metro); } .dot.reg { background: var(--band-reg); } .dot.remote { background: var(--band-remote); }
+.dot.high { background: var(--pop-high); } .dot.med { background: var(--pop-med); } .dot.low { background: var(--pop-low); }
+.site-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-items: center; margin-bottom: 8px; }
+.site-tools input[type="search"] { grid-column: 1 / -1; width: 100%; padding: 6px 8px; background: var(--field); border: 1px solid var(--line); border-radius: 6px; }
+.site-list { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; border-top: 1px solid var(--line); }
+.site-list li { display: grid; grid-template-columns: 12px 1fr; gap: 8px; align-items: start; padding: 7px 2px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.site-list li:hover { background: var(--bg); }
+.site-list li .dot { margin-top: 4px; }
+.site-list .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site-list .sm { font-size: 12px; color: var(--muted); }
+.site-list .more { display: block; cursor: default; color: var(--muted); font-size: 12px; }
 .credits { color: var(--muted); font-size: 11.5px; line-height: 1.5; margin-top: auto; }
 
 /* Map overlays */
@@ -208,6 +234,43 @@ input[type="range"] { accent-color: var(--accent); }
         </span>
       </div>
       <textarea id="csvOut" readonly hidden style="margin-top:8px;min-height:70px"></textarea>
+    </section>
+
+    <section>
+      <p class="label"><span>Site list</span><span class="count" id="siteCount"></span></p>
+      <div class="drop" id="dropZone">
+        <input type="file" id="siteFile" accept=".xlsx,.xlsm,.xls,.csv" hidden>
+        <button class="btn primary" type="button" id="uploadBtn">Upload Excel site list</button>
+        <span>or drop the file here</span>
+      </div>
+      <p class="hint">Column A is the site name, column B longitude, column C latitude. A header row is skipped automatically, and you can change the columns after loading. The file is read in your browser and is not sent anywhere.</p>
+      <div id="sheetBox" hidden>
+        <div class="file-name" id="fileName"></div>
+        <div class="col-map">
+          <label for="sheetSel">Sheet<select id="sheetSel"></select></label>
+          <label for="colName">Name<select id="colName"></select></label>
+          <label for="colLon">Longitude<select id="colLon"></select></label>
+          <label for="colLat">Latitude<select id="colLat"></select></label>
+        </div>
+      </div>
+      <p class="msg" id="siteMsg" hidden></p>
+      <div id="siteBox" hidden>
+        <div class="bands" id="bandChips"></div>
+        <div class="site-tools">
+          <label class="switch" for="siteShow"><input type="checkbox" id="siteShow" checked> Show sites</label>
+          <select id="siteColour" aria-label="Colour sites by">
+            <option value="band">Colour: distance band</option>
+            <option value="avail">Colour: PoP availability</option>
+          </select>
+          <input type="search" id="siteFilter" placeholder="Find a site" aria-label="Find a site">
+        </div>
+        <ul class="site-list" id="siteList"></ul>
+        <div class="row" style="margin-top:10px">
+          <button class="btn small" type="button" id="siteFit">Show all sites</button>
+          <button class="btn small" type="button" id="siteCopy">Copy with nearest PoP</button>
+          <button class="btn small danger" type="button" id="siteClear">Remove list</button>
+        </div>
+      </div>
     </section>
 
     <section>
@@ -412,6 +475,7 @@ const POPS = /*__POPS__*/;
     map.setPaintProperty("borders", "line-color", css("--border-line"));
     map.setPaintProperty("coast", "line-color", css("--border-line"));
     pins.forEach((p) => p.marker && paintMarker(p));
+    if (typeof updateSiteLayer === "function" && map.getLayer("sites")) updateSiteLayer();
     if (map.getLayer("ring-metro-fill")) ["ring-regional-fill", "ring-regional-line", "ring-metro-fill", "ring-metro-line"].forEach((id) =>
       map.setPaintProperty(id, id.endsWith("fill") ? "fill-color" : "line-color", css("--ring")));
   }
@@ -724,6 +788,7 @@ const POPS = /*__POPS__*/;
   let pending = null;
   map.on("click", (e) => {
     if (e.originalEvent.target.closest && e.originalEvent.target.closest(".pin-marker, .pop-mk")) return;
+    if (map.getLayer("sites") && map.queryRenderedFeatures(e.point, { layers: ["sites"] }).length) return;
     pending = e.lngLat;
     $("dropCoord").textContent = fmtDec(pending.lat, pending.lng);
     $("dropCard").hidden = false;
@@ -745,9 +810,192 @@ const POPS = /*__POPS__*/;
     clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, ms || 2600);
   }
 
+  // ---------- Site list upload (Excel / CSV) ----------
+  const SITE_KEY = "aus-pin-map.sites.v1";
+  const XLSX_URL = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+  let xlsxReady = null, workbook = null, sites = [], siteFile = "";
+  const BAND_CLS = { Metro: "metro", Regional: "reg", Remote: "remote" };
+
+  function loadXlsx() {
+    if (window.XLSX) return Promise.resolve();
+    if (!xlsxReady) xlsxReady = new Promise((res, rej) => {
+      const sc = document.createElement("script"); sc.src = XLSX_URL;
+      sc.onload = () => res(); sc.onerror = () => { xlsxReady = null; rej(new Error("The spreadsheet reader didn't load. Check your connection and try again.")); };
+      document.head.appendChild(sc);
+    });
+    return xlsxReady;
+  }
+  const colLetter = (i) => { let s = ""; i++; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+  function cellNum(v) {
+    if (v === null || v === undefined || v === "") return null;
+    if (typeof v === "number") return isFinite(v) ? { v, hemi: "" } : null;
+    const m = String(v).match(FIELD_RE); if (!m) return null;
+    const c = toCoord(m); return { v: c.v, axis: c.axis };
+  }
+  function siteMsg(t) { const el = $("siteMsg"); el.hidden = !t; el.textContent = t || ""; el.style.whiteSpace = "pre-line"; }
+
+  async function openFile(file) {
+    if (!file) return;
+    siteMsg("Reading " + file.name + "…");
+    try {
+      await loadXlsx();
+      const buf = await file.arrayBuffer();
+      workbook = XLSX.read(buf, { type: "array" });
+      siteFile = file.name;
+      $("fileName").textContent = file.name;
+      $("sheetSel").innerHTML = workbook.SheetNames.map((n, i) => `<option value="${i}">${esc(n)}</option>`).join("");
+      $("sheetBox").hidden = false;
+      setColumnOptions(true);
+      parseSheet(true);
+    } catch (err) {
+      siteMsg("Couldn't read that file. Save it as .xlsx or .csv and try again. (" + (err && err.message ? err.message : err) + ")");
+    }
+  }
+  function sheetRows() {
+    const ws = workbook.Sheets[workbook.SheetNames[+$("sheetSel").value || 0]];
+    return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null, blankrows: false });
+  }
+  function setColumnOptions(reset) {
+    const rows = sheetRows();
+    const width = Math.max(3, ...rows.slice(0, 200).map((r) => r.length));
+    const head = rows[0] || [];
+    const opts = Array.from({ length: width }, (_, i) => `<option value="${i}">${colLetter(i)}${head[i] != null && typeof head[i] === "string" ? " · " + esc(String(head[i]).slice(0, 18)) : ""}</option>`).join("");
+    const keep = reset ? [0, 1, 2] : [$("colName").value, $("colLon").value, $("colLat").value].map(Number);
+    ["colName", "colLon", "colLat"].forEach((id, k) => { $(id).innerHTML = opts; $(id).value = String(Math.min(keep[k], width - 1)); });
+  }
+
+  function parseSheet(fit) {
+    const rows = sheetRows();
+    const cN = +$("colName").value, cLon = +$("colLon").value, cLat = +$("colLat").value;
+    let header = null, skipped = [], swapped = 0;
+    const out = [];
+    rows.forEach((row, i) => {
+      if (!row || row.every((v) => v === null || v === "")) return;
+      let lon = cellNum(row[cLon]), lat = cellNum(row[cLat]);
+      if (!lon || !lat) {
+        if (!header && !out.length && !skipped.length) { header = row; return; }
+        skipped.push(i + 1); return;
+      }
+      let la = lat.v, lo = lon.v;
+      if (lat.axis === "lon" || lon.axis === "lat" || (la >= 100 && la <= 160 && lo >= -45 && lo <= -9)) { [la, lo] = [lo, la]; swapped++; }
+      if (Math.abs(la) > 90 || Math.abs(lo) > 180) { skipped.push(i + 1); return; }
+      const name = row[cN] != null && row[cN] !== "" ? String(row[cN]) : `Row ${i + 1}`;
+      const extra = [];
+      row.forEach((v, c) => {
+        if (c === cN || c === cLon || c === cLat || v === null || v === "") return;
+        extra.push([header && header[c] != null ? String(header[c]) : colLetter(c), String(v)]);
+      });
+      out.push({ name, lat: +la.toFixed(6), lon: +lo.toFixed(6), row: i + 1, extra: extra.slice(0, 8) });
+    });
+    setSites(out, siteFile);
+    const notes = [];
+    if (!out.length) notes.push("No rows had a usable longitude and latitude in the chosen columns. Check the Longitude and Latitude columns above.");
+    if (swapped) notes.push(swapped > 1 ? `${swapped} rows had latitude and longitude the wrong way round and were swapped.` : "1 row had latitude and longitude the wrong way round and was swapped.");
+    if (skipped.length) notes.push(`Skipped ${skipped.length} row${skipped.length > 1 ? "s" : ""} without valid coordinates: row ${skipped.slice(0, 8).join(", ")}${skipped.length > 8 ? "…" : ""}.`);
+    const outside = out.filter((p) => p.lat < AUS.s || p.lat > AUS.n || p.lon < AUS.w || p.lon > AUS.e).length;
+    if (outside) notes.push(`${outside} site${outside > 1 ? "s are" : " is"} outside Australia.`);
+    siteMsg(notes.join("\n"));
+    if (fit && out.length) fitSites();
+  }
+
+  function setSites(list, fileName) {
+    sites = list.map((p) => { const n = nearestPop(p.lat, p.lon); return Object.assign(p, { near: n }); });
+    siteFile = fileName || siteFile;
+    try { localStorage.setItem(SITE_KEY, JSON.stringify({ file: siteFile, sites: sites.map(({ near, ...r }) => r) })); } catch (e) {}
+    updateSiteLayer(); renderSites();
+  }
+  function siteColour(p) {
+    if ($("siteColour").value === "avail") return css({ High: "--pop-high", Medium: "--pop-med", Low: "--pop-low" }[p.near.pop.casual_level]);
+    return css({ Metro: "--band-metro", Regional: "--band-reg", Remote: "--band-remote" }[p.near.band]);
+  }
+  function updateSiteLayer() {
+    const src = map.getSource && map.getSource("sites"); if (!src) return;
+    src.setData({ type: "FeatureCollection", features: sites.map((p, i) => ({ type: "Feature", properties: { i, c: siteColour(p) }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } })) });
+    map.setLayoutProperty("sites", "visibility", $("siteShow").checked ? "visible" : "none");
+    map.setPaintProperty("sites", "circle-stroke-color", css("--panel"));
+  }
+  function addSiteLayer() {
+    map.addSource("sites", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    map.addLayer({ id: "sites", type: "circle", source: "sites", paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 3.5, 8, 6, 12, 8],
+      "circle-color": ["get", "c"], "circle-stroke-width": 1.2, "circle-stroke-color": css("--panel") } });
+    map.on("mouseenter", "sites", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "sites", () => { map.getCanvas().style.cursor = ""; });
+    map.on("click", "sites", (e) => { const f = e.features && e.features[0]; if (f) openSite(sites[f.properties.i]); });
+    updateSiteLayer();
+  }
+  const kmTxt = (km) => (km < 10 ? km.toFixed(1) : Math.round(km)) + " km";
+  let sitePopup = null;
+  function openSite(p, fly) {
+    if (!p) return;
+    if (fly) map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 10), duration: 1400, essential: true });
+    const n = p.near;
+    const extra = p.extra.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+    if (sitePopup) sitePopup.remove();
+    sitePopup = new maplibregl.Popup({ offset: 10, maxWidth: "300px" }).setLngLat([p.lon, p.lat]).setHTML(`<div class="pop"><h3>${esc(p.name)}</h3>
+      <div class="pin-coord">${fmtDec(p.lat, p.lon)}</div>
+      <dl><dt>Nearest PoP</dt><dd><span class="chip ${LV[n.pop.casual_level]}">${esc(n.pop.casual_level)}</span> ${esc(n.pop.name)}</dd>
+      <dt>Distance</dt><dd>${kmTxt(n.km)} straight line</dd><dt>Band</dt><dd><b>${n.band}</b></dd>${extra}
+      <dt>Source</dt><dd>${esc(siteFile)}, row ${p.row}</dd></dl></div>`).addTo(map);
+  }
+  function renderSites() {
+    $("siteBox").hidden = !sites.length;
+    $("siteCount").textContent = sites.length ? sites.length : "";
+    if (!sites.length) return;
+    const mode = $("siteColour").value;
+    const groups = mode === "avail" ? LEVELS.map((l) => [l + " PoP", LV[l], sites.filter((p) => p.near.pop.casual_level === l).length])
+      : ["Metro", "Regional", "Remote"].map((b) => [b, BAND_CLS[b], sites.filter((p) => p.near.band === b).length]);
+    $("bandChips").innerHTML = groups.map(([t, c, n]) => `<span class="bchip"><i class="dot ${c}"></i>${t} <b>${n}</b></span>`).join("");
+    const q = $("siteFilter").value.trim().toLowerCase();
+    const match = sites.map((p, i) => [p, i]).filter(([p]) => !q || p.name.toLowerCase().includes(q) || p.near.pop.name.toLowerCase().includes(q));
+    const LIMIT = 400;
+    $("siteList").innerHTML = match.slice(0, LIMIT).map(([p, i]) => {
+      const c = mode === "avail" ? LV[p.near.pop.casual_level] : BAND_CLS[p.near.band];
+      return `<li data-site="${i}"><i class="dot ${c}"></i><div style="min-width:0"><div class="nm">${esc(p.name)}</div>
+        <div class="sm">${p.near.band} · ${esc(p.near.pop.name)} ${kmTxt(p.near.km)}</div></div></li>`;
+    }).join("") + (match.length > LIMIT ? `<li class="more">Showing ${LIMIT} of ${match.length}. Type in Find a site to narrow the list.</li>` : "")
+      + (!match.length ? `<li class="more">No sites match “${esc(q)}”.</li>` : "");
+  }
+  function fitSites() {
+    if (!sites.length) return;
+    const b = new maplibregl.LngLatBounds(); sites.forEach((p) => b.extend([p.lon, p.lat]));
+    map.fitBounds(b, { padding: 60, maxZoom: 11, duration: 1200 });
+  }
+
+  $("uploadBtn").addEventListener("click", () => $("siteFile").click());
+  $("siteFile").addEventListener("change", (e) => { openFile(e.target.files[0]); e.target.value = ""; });
+  const dz = $("dropZone");
+  ["dragenter", "dragover"].forEach((t) => document.addEventListener(t, (e) => { if (e.dataTransfer && [...e.dataTransfer.types].includes("Files")) { e.preventDefault(); dz.classList.add("over"); } }));
+  ["dragleave", "drop"].forEach((t) => document.addEventListener(t, (e) => { if (t === "dragleave" && e.relatedTarget) return; dz.classList.remove("over"); }));
+  document.addEventListener("drop", (e) => { if (e.dataTransfer && e.dataTransfer.files.length) { e.preventDefault(); openFile(e.dataTransfer.files[0]); } });
+  $("sheetSel").addEventListener("change", () => { setColumnOptions(true); parseSheet(true); });
+  ["colName", "colLon", "colLat"].forEach((id) => $(id).addEventListener("change", () => parseSheet(true)));
+  $("siteShow").addEventListener("change", updateSiteLayer);
+  $("siteColour").addEventListener("change", () => { updateSiteLayer(); renderSites(); });
+  $("siteFilter").addEventListener("input", renderSites);
+  $("siteList").addEventListener("click", (e) => { const li = e.target.closest("[data-site]"); if (li) openSite(sites[+li.dataset.site], true); });
+  $("siteFit").addEventListener("click", fitSites);
+  $("siteClear").addEventListener("click", () => {
+    sites = []; workbook = null; siteFile = ""; $("sheetBox").hidden = true; siteMsg("");
+    try { localStorage.removeItem(SITE_KEY); } catch (e) {}
+    if (sitePopup) sitePopup.remove();
+    updateSiteLayer(); renderSites(); toast("Removed the site list");
+  });
+  $("siteCopy").addEventListener("click", () => {
+    const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = "site,longitude,latitude,nearest_pop,casual_availability,straight_line_km,band\n" + sites.map((p) =>
+      [q(p.name), p.lon, p.lat, q(p.near.pop.name), p.near.pop.casual_level, p.near.km.toFixed(1), p.near.band].join(",")).join("\n");
+    copyText(csv, () => toast(`Copied ${sites.length} sites with nearest PoP`));
+  });
+  function restoreSites() {
+    try { const raw = localStorage.getItem(SITE_KEY); if (!raw) return; const d = JSON.parse(raw); if (d && d.sites && d.sites.length) { setSites(d.sites, d.file); $("fileName").textContent = d.file + " (saved in this browser)"; } } catch (e) {}
+  }
+
   // ---------- Boot ----------
   map.on("load", () => {
     addRingLayers();
+    addSiteLayer();
+    restoreSites();
     applyMapTheme();
     applyPopFilter();
     updatePopLabels();
