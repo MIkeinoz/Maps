@@ -1,0 +1,605 @@
+<title>Australia Pin Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>/*__MAPLIBRE_CSS__*/</style>
+<style>
+/* Layout: full-height survey workbench. Instrument panel on the left, live terrain map filling the rest; stacks map-over-panel on phones. */
+:root {
+  --bg: #f3f1ec;
+  --panel: #fbfaf7;
+  --fg: #1d2326;
+  --muted: #5d6b70;
+  --line: #d9d5cc;
+  --accent: #c2471d;        /* survey-flag orange */
+  --accent-ink: #ffffff;
+  --field: #ffffff;
+  --sea: #b9d3dc;
+  --land: #e7c9a0;
+  --border-line: #7a4a2a;
+  --hill-shadow: #5a3b25;
+  --warn: #8a5a00;
+  --warn-bg: #fff4d6;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171a; --panel: #182024; --fg: #e6e9e7; --muted: #93a1a6; --line: #2c373c;
+    --accent: #f07a45; --accent-ink: #1a0f08; --field: #0f1416;
+    --sea: #0e2a36; --land: #6b4a30; --border-line: #e9c49a; --hill-shadow: #0a0604;
+    --warn: #ffd27a; --warn-bg: #3a2c0c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171a; --panel: #182024; --fg: #e6e9e7; --muted: #93a1a6; --line: #2c373c;
+  --accent: #f07a45; --accent-ink: #1a0f08; --field: #0f1416;
+  --sea: #0e2a36; --land: #6b4a30; --border-line: #e9c49a; --hill-shadow: #0a0604;
+  --warn: #ffd27a; --warn-bg: #3a2c0c;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; }
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; height: 100%; }
+.panel {
+  background: var(--panel); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 18px; overflow-y: auto; min-width: 0;
+  padding-block: 18px 22px;
+  padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: 18px;
+}
+.map-wrap { position: relative; min-width: 0; }
+#map { position: absolute; inset: 0; background: var(--sea); }
+
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 30px; line-height: 1; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; line-height: 1.45; }
+.label { font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.label .count { font-family: var(--font-mono); letter-spacing: 0; text-transform: none; font-weight: 400; }
+
+textarea {
+  width: 100%; min-height: 92px; resize: vertical; padding: 10px 12px;
+  background: var(--field); border: 1px solid var(--line); border-radius: 6px;
+  font-family: var(--font-mono); font-size: 13px; line-height: 1.5;
+}
+.hint { color: var(--muted); font-size: 12.5px; line-height: 1.5; margin: 8px 0 0; }
+.hint code { font-family: var(--font-mono); font-size: 12px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn {
+  border: 1px solid var(--line); background: var(--field); border-radius: 6px;
+  padding: 8px 12px; cursor: pointer; font-weight: 500; line-height: 1.2;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.small { padding: 5px 9px; font-size: 12.5px; }
+.btn.danger { color: var(--accent); }
+.msg { font-size: 12.5px; line-height: 1.45; margin: 8px 0 0; padding: 8px 10px; border-radius: 6px; background: var(--warn-bg); color: var(--warn); }
+
+.pins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.pin-item { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 6px 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.pin-num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 600 12px/24px var(--font-mono); text-align: center; }
+.pin-body { min-width: 0; cursor: pointer; }
+.pin-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pin-coord { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tag { font-family: var(--font-body); font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; margin-left: 6px; color: var(--muted); vertical-align: 1px; }
+.icon-btn { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 4px; font-size: 16px; line-height: 1; }
+.icon-btn:hover { color: var(--accent); background: var(--bg); }
+.rename { width: 100%; padding: 4px 6px; border: 1px solid var(--accent); border-radius: 4px; background: var(--field); font-weight: 600; }
+.empty { color: var(--muted); padding: 14px 0; border-bottom: 1px solid var(--line); line-height: 1.45; }
+
+.view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; align-items: center; }
+.view-grid label { color: var(--muted); font-size: 13px; }
+select, input[type="range"] { width: 100%; }
+select { background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.switch { display: flex; gap: 8px; align-items: center; cursor: pointer; color: var(--fg) !important; }
+.switch input { accent-color: var(--accent); width: 16px; height: 16px; }
+input[type="range"] { accent-color: var(--accent); }
+
+.credits { color: var(--muted); font-size: 11.5px; line-height: 1.5; margin-top: auto; }
+
+/* Map overlays */
+.readout {
+  position: absolute; left: max(10px, env(safe-area-inset-left, 0px)); bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 10px; font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; z-index: 2;
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap; max-width: calc(100% - 20px);
+}
+.readout span { color: var(--muted); }
+.drop-card {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 20px rgb(0 0 0 / .18);
+  padding: 10px 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; max-width: calc(100% - 24px);
+}
+.drop-card .pin-coord { font-size: 12.5px; color: var(--fg); }
+.toast {
+  position: absolute; top: 10px; right: max(56px, calc(env(safe-area-inset-right, 0px) + 56px)); z-index: 4; max-width: 280px;
+  background: var(--fg); color: var(--bg); padding: 8px 12px; border-radius: 6px; font-size: 13px; line-height: 1.4;
+}
+
+/* Markers */
+.pin-marker { width: 28px; height: 38px; cursor: pointer; filter: drop-shadow(0 2px 2px rgb(0 0 0 / .35)); }
+.pin-marker svg { display: block; }
+.pin-marker text { font: 600 11px var(--font-mono); }
+.pin-marker.active { transform-origin: bottom center; }
+.city { pointer-events: none; display: flex; align-items: center; gap: 4px; font: 500 11.5px var(--font-body); color: var(--fg); text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel), 0 0 2px var(--panel); white-space: nowrap; }
+.city i { width: 6px; height: 6px; border-radius: 50%; background: var(--fg); border: 1px solid var(--panel); flex: none; }
+.city.cap { font-weight: 600; font-size: 12.5px; }
+.maplibregl-popup-content { background: var(--panel); color: var(--fg); font-family: var(--font-body); border-radius: 8px; padding: 12px 14px; box-shadow: 0 6px 20px rgb(0 0 0 / .2); }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--panel); }
+.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--panel); }
+.maplibregl-popup-close-button { color: var(--muted); font-size: 18px; padding: 0 6px; }
+.pop h3 { margin: 0 18px 4px 0; font-family: var(--font-display); font-size: 19px; font-weight: 600; }
+.pop .pin-coord { margin-bottom: 8px; }
+.pop a { color: var(--accent); }
+.maplibregl-ctrl-attrib { font-size: 10.5px; }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 56% 44%; }
+  .map-wrap { grid-row: 1; }
+  .panel { grid-row: 2; border-right: 0; border-top: 1px solid var(--line); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+  h1 { font-size: 26px; }
+  .toast { right: 50px; left: 12px; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="app">
+  <aside class="panel" aria-label="Pin controls">
+    <header>
+      <h1>Australia Pin Map</h1>
+      <p class="sub">Paste GPS coordinates to drop pins on a 3D terrain map. Drag to pan, scroll or pinch to zoom, right-drag or two-finger drag to tilt and rotate.</p>
+    </header>
+
+    <section>
+      <p class="label"><span>Add coordinates</span></p>
+      <form id="addForm">
+        <textarea id="coordInput" spellcheck="false" placeholder="-33.8568, 151.2153, Sydney Opera House&#10;25°20'40&quot;S 131°02'13&quot;E, Uluru"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn primary" type="submit" id="addBtn">Drop pins</button>
+          <button class="btn" type="button" id="fitBtn">Show all pins</button>
+        </div>
+        <p class="hint">One location per line: <code>lat, lon, label</code>. Decimal degrees or degrees-minutes-seconds with N/S/E/W both work, and so does a Google Maps link. Or click the map to drop a pin there.</p>
+        <p class="msg" id="parseMsg" hidden></p>
+      </form>
+    </section>
+
+    <section>
+      <p class="label"><span>Pins</span><span class="count" id="pinCount">0</span></p>
+      <ul class="pins" id="pinList"></ul>
+      <div class="row" style="margin-top:10px">
+        <button class="btn small" type="button" id="copyBtn">Copy as CSV</button>
+        <button class="btn small danger" type="button" id="clearBtn">Remove all</button>
+        <span id="clearConfirm" class="row" hidden>
+          <span style="font-size:12.5px">Remove every pin?</span>
+          <button class="btn small primary" type="button" id="clearYes">Remove</button>
+          <button class="btn small" type="button" id="clearNo">Keep</button>
+        </span>
+      </div>
+      <textarea id="csvOut" readonly hidden style="margin-top:8px;min-height:70px"></textarea>
+    </section>
+
+    <section>
+      <p class="label"><span>View</span></p>
+      <div class="view-grid">
+        <label class="switch" for="t3d"><input type="checkbox" id="t3d" checked> 3D terrain</label>
+        <label class="switch" for="tCities"><input type="checkbox" id="tCities" checked> Towns</label>
+        <label for="exag">Height ×<span id="exagVal">12</span></label>
+        <input type="range" id="exag" min="1" max="40" step="1" value="12">
+        <label for="basemap">Base map</label>
+        <select id="basemap">
+          <option value="terrain">Terrain (built in)</option>
+          <option value="streets">Streets (online)</option>
+          <option value="satellite">Satellite (online)</option>
+        </select>
+      </div>
+      <p class="hint">Heights are exaggerated so the low Australian relief shows up. Streets and satellite load from the internet and need the page opened outside the Claude preview.</p>
+    </section>
+
+    <p class="credits">Boundaries and towns: Natural Earth (public domain). Elevation: Mapzen Terrarium tiles via AWS Open Data, about 2.4 km per pixel at full detail.</p>
+  </aside>
+
+  <main class="map-wrap">
+    <div id="map" role="application" aria-label="3D map of Australia"></div>
+    <div class="drop-card" id="dropCard" hidden>
+      <span class="pin-coord" id="dropCoord"></span>
+      <button class="btn small primary" type="button" id="dropYes">Drop pin here</button>
+      <button class="icon-btn" type="button" id="dropNo" aria-label="Cancel">✕</button>
+    </div>
+    <div class="readout" id="readout"><span>Cursor</span><b id="cursorTxt">–</b><span>Zoom</span><b id="zoomTxt">–</b></div>
+    <div class="toast" id="toast" hidden></div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+const STATES = /*__STATES__*/;
+const CITIES = /*__CITIES__*/;
+const DEM = /*__DEM__*/;
+const FLAT_TILE = "/*__FLAT__*/";
+</script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const STORE_KEY = "aus-pin-map.v1";
+  const AUS = { w: 112, e: 154.5, s: -44.5, n: -9 };
+
+  // ---------- Storage (best effort) ----------
+  function loadPins() {
+    try { const raw = localStorage.getItem(STORE_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    return null;
+  }
+  function savePins() { try { localStorage.setItem(STORE_KEY, JSON.stringify(pins)); } catch (e) {} }
+
+  const EXAMPLES = [
+    { lat: -33.8568, lon: 151.2153, label: "Sydney Opera House", example: true },
+    { lat: -25.3444, lon: 131.0369, label: "Uluru", example: true },
+    { lat: -36.4559, lon: 148.2633, label: "Mt Kosciuszko", example: true },
+    { lat: -41.6848, lon: 145.9511, label: "Cradle Mountain", example: true },
+    { lat: -17.9614, lon: 122.2359, label: "Broome", example: true }
+  ];
+  let pins = loadPins() || EXAMPLES.slice();
+  let nextId = 1;
+  pins.forEach((p) => { p.id = nextId++; });
+
+  // ---------- Coordinate parsing ----------
+  const FIELD_RE = /^\s*([NSEW])?\s*([+-]?\d{1,3}(?:\.\d+)?)\s*(?:[°º]\s*)?(?:(\d{1,2}(?:\.\d+)?)\s*['′’]\s*)?(?:(\d{1,2}(?:\.\d+)?)\s*(?:["″”]|''|’’)\s*)?([NSEW])?\s*$/i;
+  const LOOSE_RE = /([NSEW])?\s*([+-]?\d{1,3}(?:\.\d+)?)(?:\s*[°º]\s*(?:(\d{1,2}(?:\.\d+)?)\s*['′’]\s*)?(?:(\d{1,2}(?:\.\d+)?)\s*(?:["″”]|''|’’)\s*)?)?\s*([NSEW](?![a-z]))?/gi;
+
+  function toCoord(m) {
+    const hemi = ((m[1] || m[5] || "") + "").toUpperCase();
+    let v = Math.abs(parseFloat(m[2])) + (m[3] ? parseFloat(m[3]) / 60 : 0) + (m[4] ? parseFloat(m[4]) / 3600 : 0);
+    const neg = m[2].trim().startsWith("-") || hemi === "S" || hemi === "W";
+    if (neg) v = -v;
+    const axis = hemi === "N" || hemi === "S" ? "lat" : hemi === "E" || hemi === "W" ? "lon" : null;
+    const strong = !!(hemi || m[3] || m[2].includes("."));
+    return { v, axis, strong };
+  }
+
+  function parseLine(line) {
+    const text = line.trim();
+    if (!text || text.startsWith("#")) return null;
+    let coords = [], labels = [];
+    // Map links: Google Maps "@lat,lon" or "?q=lat,lon" / "query=" / "ll=".
+    const url = text.match(/https?:\/\/\S+/);
+    if (url) {
+      const m = url[0].match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/) || url[0].match(/[?&](?:q|query|ll|center)=(-?\d+(?:\.\d+)?)(?:,|%2C)\s*(-?\d+(?:\.\d+)?)/i);
+      if (m) {
+        const lat = +m[1], lon = +m[2];
+        if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return { error: "Out of range (latitude ±90, longitude ±180): " + text };
+        const label = text.replace(url[0], " ").replace(/[,;\t|]+/g, " ").replace(/\s+/g, " ").trim();
+        return { lat, lon, label, note: "", outside: lat < AUS.s || lat > AUS.n || lon < AUS.w || lon > AUS.e };
+      }
+    }
+    const fields = text.split(/[,;\t|]/);
+    fields.forEach((f) => { const m = f.match(FIELD_RE); if (m) coords.push(toCoord(m)); else if (f.trim()) labels.push(f.trim()); });
+    if (coords.length !== 2) {
+      // Fallback: scan the whole line (space-separated pairs, DMS with spaces, map links).
+      const found = [];
+      let m; LOOSE_RE.lastIndex = 0;
+      while ((m = LOOSE_RE.exec(text))) { if (m[0].trim()) found.push({ c: toCoord(m), raw: m[0] }); if (m.index === LOOSE_RE.lastIndex) LOOSE_RE.lastIndex++; }
+      const strong = found.filter((f) => f.c.strong);
+      const pick = (strong.length >= 2 ? strong : found).slice(0, 2);
+      if (pick.length < 2) return { error: "Couldn't find a latitude and longitude in: " + text };
+      coords = pick.map((p) => p.c);
+      let rest = text;
+      pick.forEach((p) => { rest = rest.replace(p.raw, " "); });
+      rest = rest.replace(/https?:\/\/\S+/g, "").replace(/[,;\t|@]+/g, " ").replace(/\s+/g, " ").trim();
+      labels = rest ? [rest] : [];
+    }
+    let [a, b] = coords;
+    let lat, lon, note = "";
+    if (a.axis === "lon" || b.axis === "lat") { lat = b.v; lon = a.v; }
+    else { lat = a.v; lon = b.v; }
+    if (!a.axis && !b.axis) {
+      const looksSwapped = lat >= 100 && lat <= 160 && lon >= -45 && lon <= -9;
+      if (Math.abs(lat) > 90 || looksSwapped) { [lat, lon] = [lon, lat]; note = "Read as longitude, latitude"; }
+    }
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return { error: "Out of range (latitude ±90, longitude ±180): " + text };
+    const outside = lat < AUS.s || lat > AUS.n || lon < AUS.w || lon > AUS.e;
+    return { lat: +lat.toFixed(6), lon: +lon.toFixed(6), label: labels.join(", "), note, outside };
+  }
+
+  // ---------- Formatting ----------
+  const fmtDec = (lat, lon) => `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+  function dms(v, pos, neg) {
+    const h = v < 0 ? neg : pos; v = Math.abs(v);
+    let d = Math.floor(v), mF = (v - d) * 60, m = Math.floor(mF), s = Math.round((mF - m) * 60 * 10) / 10;
+    if (s >= 60) { s = 0; m += 1; } if (m >= 60) { m = 0; d += 1; }
+    return `${d}°${String(m).padStart(2, "0")}′${s.toFixed(1).padStart(4, "0")}″${h}`;
+  }
+  const fmtDms = (lat, lon) => `${dms(lat, "N", "S")} ${dms(lon, "E", "W")}`;
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // ---------- Embedded elevation tiles via custom protocol ----------
+  const b64ToBuf = (b64) => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
+  const flatBuf = b64ToBuf(FLAT_TILE);
+  maplibregl.addProtocol("ausdem", async (params) => {
+    const key = params.url.replace("ausdem://", "").split("/").join("-");
+    const b64 = DEM[key];
+    return { data: b64 ? b64ToBuf(b64) : flatBuf.slice(0) };
+  });
+
+  // ---------- Theme colours for the map ----------
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  const map = new maplibregl.Map({
+    container: "map",
+    style: {
+      version: 8,
+      sources: {
+        states: { type: "geojson", data: STATES },
+        dem: { type: "raster-dem", tiles: ["ausdem://{z}/{x}/{y}"], tileSize: 256, encoding: "terrarium", maxzoom: 6, minzoom: 3,
+               bounds: [AUS.w, AUS.s, AUS.e, AUS.n] },
+        demShade: { type: "raster-dem", tiles: ["ausdem://{z}/{x}/{y}"], tileSize: 256, encoding: "terrarium", maxzoom: 6, minzoom: 3,
+               bounds: [AUS.w, AUS.s, AUS.e, AUS.n] },
+        streets: { type: "raster", tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 19,
+                   attribution: "© OpenStreetMap contributors" },
+        satellite: { type: "raster", tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"], tileSize: 256, maxzoom: 19,
+                   attribution: "Imagery © Esri, Maxar, Earthstar Geographics" }
+      },
+      layers: [
+        { id: "sea", type: "background", paint: { "background-color": css("--sea") } },
+        { id: "land", type: "fill", source: "states", paint: { "fill-color": css("--land") } },
+        { id: "hills", type: "hillshade", source: "demShade", paint: {
+            "hillshade-shadow-color": css("--hill-shadow"), "hillshade-highlight-color": "rgba(255,255,255,0.35)",
+            "hillshade-accent-color": css("--hill-shadow"), "hillshade-exaggeration": 0.55 } },
+        { id: "streets", type: "raster", source: "streets", layout: { visibility: "none" } },
+        { id: "satellite", type: "raster", source: "satellite", layout: { visibility: "none" } },
+        { id: "borders", type: "line", source: "states", paint: { "line-color": css("--border-line"), "line-width": ["interpolate", ["linear"], ["zoom"], 3, 0.6, 8, 1.6], "line-opacity": 0.75, "line-dasharray": [3, 2] } },
+        { id: "coast", type: "line", source: "states", paint: { "line-color": css("--border-line"), "line-width": 0.6, "line-opacity": 0.35 } }
+      ]
+    },
+    bounds: [[AUS.w, AUS.s], [AUS.e, AUS.n]],
+    fitBoundsOptions: { padding: 30 },
+    maxPitch: 80,
+    attributionControl: { compact: true }
+  });
+  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+  map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
+
+  function applyMapTheme() {
+    if (!map.isStyleLoaded()) return;
+    map.setPaintProperty("sea", "background-color", css("--sea"));
+    map.setPaintProperty("land", "fill-color", css("--land"));
+    map.setPaintProperty("hills", "hillshade-shadow-color", css("--hill-shadow"));
+    map.setPaintProperty("hills", "hillshade-accent-color", css("--hill-shadow"));
+    map.setPaintProperty("borders", "line-color", css("--border-line"));
+    map.setPaintProperty("coast", "line-color", css("--border-line"));
+    pins.forEach((p) => p.marker && paintMarker(p));
+  }
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyMapTheme); } catch (e) {}
+  new MutationObserver(applyMapTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  // ---------- 3D ----------
+  function set3D(on, animate) {
+    const ex = +$("exag").value;
+    if (on) { map.setTerrain({ source: "dem", exaggeration: ex }); if (animate !== false) map.easeTo({ pitch: 55, duration: 900 }); }
+    else { map.setTerrain(null); if (animate !== false) map.easeTo({ pitch: 0, bearing: 0, duration: 700 }); }
+  }
+  $("t3d").addEventListener("change", (e) => set3D(e.target.checked));
+  $("exag").addEventListener("input", (e) => {
+    $("exagVal").textContent = e.target.value;
+    if ($("t3d").checked) map.setTerrain({ source: "dem", exaggeration: +e.target.value });
+  });
+
+  // ---------- Base map ----------
+  let tileErrorShown = false;
+  $("basemap").addEventListener("change", (e) => {
+    const v = e.target.value;
+    map.setLayoutProperty("streets", "visibility", v === "streets" ? "visible" : "none");
+    map.setLayoutProperty("satellite", "visibility", v === "satellite" ? "visible" : "none");
+    tileErrorShown = false;
+  });
+  map.on("error", (e) => {
+    if (e && (e.sourceId === "streets" || e.sourceId === "satellite") && !tileErrorShown) {
+      tileErrorShown = true;
+      toast("Online map tiles can't load here. Open the page from its own web address to use Streets or Satellite.", 6000);
+    }
+  });
+
+  // ---------- Towns ----------
+  const cityMarkers = CITIES.map(([name, lon, lat, pop, cap]) => {
+    const el = document.createElement("div");
+    el.className = "city" + (cap ? " cap" : "");
+    el.innerHTML = `<i></i>${esc(name)}`;
+    const mk = new maplibregl.Marker({ element: el, anchor: "left", offset: [-3, 0] }).setLngLat([lon, lat]);
+    return { mk, pop, cap, on: false };
+  });
+  function updateCities() {
+    const z = map.getZoom(), show = $("tCities").checked;
+    cityMarkers.forEach((c) => {
+      const minPop = z < 4 ? Infinity : z < 5 ? 900000 : z < 6 ? 120000 : z < 7 ? 50000 : 0;
+      const vis = show && (c.cap ? z >= 3.6 : c.pop >= minPop);
+      if (vis && !c.on) { c.mk.addTo(map); c.on = true; }
+      else if (!vis && c.on) { c.mk.remove(); c.on = false; }
+    });
+  }
+  $("tCities").addEventListener("change", updateCities);
+  map.on("zoomend", updateCities);
+
+  // ---------- Pins ----------
+  function pinSvg(n) {
+    const fill = css("--accent"), ink = css("--accent-ink");
+    return `<svg width="28" height="38" viewBox="0 0 28 38" aria-hidden="true"><path d="M14 1C6.8 1 1 6.6 1 13.6 1 23 14 37 14 37s13-14 13-23.4C27 6.6 21.2 1 14 1z" fill="${fill}" stroke="${ink}" stroke-width="1.5"/><text x="14" y="17.5" text-anchor="middle" fill="${ink}">${n}</text></svg>`;
+  }
+  function paintMarker(p) { p.marker.getElement().innerHTML = pinSvg(pins.indexOf(p) + 1); }
+
+  function popupHtml(p) {
+    const gm = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}`;
+    return `<div class="pop"><h3>${esc(p.label || "Unnamed pin")}</h3>
+      <div class="pin-coord">${fmtDec(p.lat, p.lon)}<br>${fmtDms(p.lat, p.lon)}</div>
+      <div class="row"><button class="btn small" type="button" data-copy="${p.id}">Copy coordinates</button>
+      <a href="${gm}" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div>`;
+  }
+
+  function addMarker(p) {
+    const el = document.createElement("div");
+    el.className = "pin-marker";
+    el.setAttribute("role", "button");
+    el.setAttribute("aria-label", p.label || "Pin");
+    p.marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+      .setLngLat([p.lon, p.lat])
+      .setPopup(new maplibregl.Popup({ offset: 34, maxWidth: "280px" }).setHTML(popupHtml(p)))
+      .addTo(map);
+    paintMarker(p);
+  }
+
+  function renderList() {
+    const ul = $("pinList");
+    $("pinCount").textContent = pins.length;
+    if (!pins.length) { ul.innerHTML = `<li class="empty">No pins yet. Paste coordinates above or click the map to drop the first one.</li>`; return; }
+    ul.innerHTML = pins.map((p, i) => `<li class="pin-item" data-id="${p.id}">
+        <span class="pin-num">${i + 1}</span>
+        <div class="pin-body" data-fly="${p.id}" title="Fly to this pin">
+          <div class="pin-name">${esc(p.label || "Unnamed pin")}${p.example ? '<span class="tag">Example</span>' : ""}</div>
+          <div class="pin-coord">${fmtDec(p.lat, p.lon)}</div>
+        </div>
+        <button class="icon-btn" type="button" data-edit="${p.id}" aria-label="Rename ${esc(p.label || "pin")}" title="Rename">✎</button>
+        <button class="icon-btn" type="button" data-del="${p.id}" aria-label="Remove ${esc(p.label || "pin")}">✕</button>
+      </li>`).join("");
+  }
+
+  function refreshAll() { pins.forEach(paintMarker); renderList(); savePins(); }
+
+  function flyTo(p) {
+    map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 9), pitch: $("t3d").checked ? 55 : 0, duration: 1800, essential: true });
+    pins.forEach((q) => { if (q !== p && q.marker.getPopup().isOpen()) q.marker.togglePopup(); });
+    setTimeout(() => { if (!p.marker.getPopup().isOpen()) p.marker.togglePopup(); }, 1850);
+  }
+
+  function fitAll() {
+    if (!pins.length) { map.fitBounds([[AUS.w, AUS.s], [AUS.e, AUS.n]], { padding: 30 }); return; }
+    if (pins.length === 1) { flyTo(pins[0]); return; }
+    const b = new maplibregl.LngLatBounds();
+    pins.forEach((p) => b.extend([p.lon, p.lat]));
+    map.fitBounds(b, { padding: 70, maxZoom: 11, duration: 1400 });
+  }
+
+  function addPins(list) {
+    const added = list.map((d) => { const p = { id: nextId++, lat: d.lat, lon: d.lon, label: d.label || "" }; pins.push(p); addMarker(p); return p; });
+    refreshAll();
+    return added;
+  }
+
+  $("pinList").addEventListener("click", (e) => {
+    const del = e.target.closest("[data-del]"), fly = e.target.closest("[data-fly]"), edit = e.target.closest("[data-edit]");
+    if (e.target.closest(".rename")) return;
+    if (edit) {
+      const p = pins.find((q) => q.id === +edit.dataset.edit); if (!p) return;
+      const nameEl = edit.parentElement.querySelector(".pin-name");
+      nameEl.innerHTML = `<input class="rename" id="rename-${p.id}" value="${esc(p.label)}" placeholder="Pin name" aria-label="Pin name">`;
+      const inp = nameEl.querySelector("input"); inp.focus(); inp.select();
+      const done = (save) => { if (save) { p.label = inp.value.trim(); p.example = false; p.marker.setPopup(new maplibregl.Popup({ offset: 34, maxWidth: "280px" }).setHTML(popupHtml(p))); } refreshAll(); };
+      inp.addEventListener("keydown", (k) => { if (k.key === "Enter") done(true); if (k.key === "Escape") done(false); });
+      inp.addEventListener("blur", () => done(true), { once: true });
+      return;
+    }
+    if (del) {
+      const i = pins.findIndex((p) => p.id === +del.dataset.del);
+      if (i >= 0) { pins[i].marker.remove(); pins.splice(i, 1); refreshAll(); }
+    } else if (fly) {
+      const p = pins.find((q) => q.id === +fly.dataset.fly); if (p) flyTo(p);
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-copy]"); if (!b) return;
+    const p = pins.find((q) => q.id === +b.dataset.copy); if (!p) return;
+    copyText(`${p.lat}, ${p.lon}`, () => { b.textContent = "Copied"; });
+  });
+
+  function copyText(text, ok) {
+    try {
+      navigator.clipboard.writeText(text).then(ok, () => fallbackCopy(text));
+    } catch (err) { fallbackCopy(text); }
+  }
+  function fallbackCopy(text) {
+    const ta = $("csvOut"); ta.hidden = false; ta.value = text; ta.focus(); ta.select();
+    toast("Copy didn't go through. The text is selected below, press Ctrl+C or ⌘C.");
+  }
+
+  // ---------- Form ----------
+  $("addForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const lines = $("coordInput").value.split(/\r?\n/);
+    const good = [], errs = [], notes = [];
+    lines.forEach((l) => {
+      const r = parseLine(l); if (!r) return;
+      if (r.error) errs.push(r.error); else {
+        good.push(r);
+        if (r.note) notes.push(`${r.note}: ${r.label || fmtDec(r.lat, r.lon)}`);
+        if (r.outside) notes.push(`Outside Australia: ${r.label || fmtDec(r.lat, r.lon)}`);
+      }
+    });
+    const msg = $("parseMsg");
+    if (!good.length && !errs.length) { msg.hidden = false; msg.textContent = "Type or paste at least one latitude and longitude first."; return; }
+    if (good.length) {
+      const added = addPins(good);
+      $("coordInput").value = errs.length ? lines.filter((l) => { const r = parseLine(l); return r && r.error; }).join("\n") : "";
+      if (added.length === 1) flyTo(added[0]); else fitAll();
+      toast(`Dropped ${added.length} pin${added.length > 1 ? "s" : ""}`);
+    }
+    const all = errs.concat(notes);
+    msg.hidden = !all.length; msg.textContent = all.join("\n");
+    msg.style.whiteSpace = "pre-line";
+  });
+  $("coordInput").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $("addBtn").click(); } });
+  $("fitBtn").addEventListener("click", fitAll);
+
+  $("clearBtn").addEventListener("click", () => { $("clearConfirm").hidden = false; $("clearBtn").hidden = true; });
+  $("clearNo").addEventListener("click", () => { $("clearConfirm").hidden = true; $("clearBtn").hidden = false; });
+  $("clearYes").addEventListener("click", () => {
+    pins.forEach((p) => p.marker.remove()); pins = []; refreshAll();
+    $("clearConfirm").hidden = true; $("clearBtn").hidden = false; toast("Removed all pins");
+  });
+
+  $("copyBtn").addEventListener("click", () => {
+    const csv = "label,latitude,longitude\n" + pins.map((p) => `"${(p.label || "").replace(/"/g, '""')}",${p.lat},${p.lon}`).join("\n");
+    copyText(csv, () => toast(`Copied ${pins.length} pin${pins.length === 1 ? "" : "s"} as CSV`));
+  });
+
+  // ---------- Map clicks & readout ----------
+  let pending = null;
+  map.on("click", (e) => {
+    if (e.originalEvent.target.closest && e.originalEvent.target.closest(".pin-marker")) return;
+    pending = e.lngLat;
+    $("dropCoord").textContent = fmtDec(pending.lat, pending.lng);
+    $("dropCard").hidden = false;
+  });
+  $("dropYes").addEventListener("click", () => {
+    if (!pending) return;
+    addPins([{ lat: +pending.lat.toFixed(6), lon: +pending.lng.toFixed(6), label: "" }]);
+    $("dropCard").hidden = true; pending = null; toast("Pin dropped. Use ✎ in the list to name it.");
+  });
+  $("dropNo").addEventListener("click", () => { $("dropCard").hidden = true; pending = null; });
+
+  map.on("mousemove", (e) => { $("cursorTxt").textContent = fmtDec(e.lngLat.lat, e.lngLat.lng); });
+  const zoomTxt = () => { $("zoomTxt").textContent = map.getZoom().toFixed(1); };
+  map.on("zoom", zoomTxt);
+
+  let toastTimer;
+  function toast(t, ms) {
+    const el = $("toast"); el.textContent = t; el.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, ms || 2600);
+  }
+
+  // ---------- Boot ----------
+  map.on("load", () => {
+    applyMapTheme();
+    set3D(true, false);
+    map.jumpTo({ pitch: 50 });
+    pins.forEach(addMarker);
+    renderList();
+    updateCities();
+    zoomTxt();
+  });
+  renderList();
+})();
+</script>
