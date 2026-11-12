@@ -128,6 +128,8 @@ input[type="range"] { accent-color: var(--accent); }
 .pop-mk .dia { width: 13px; height: 13px; transform: rotate(45deg); border: 2px solid var(--pop-ink); box-shadow: 0 1px 3px rgb(0 0 0 / .4); flex: none; }
 .pop-mk .nm { display: none; font: 600 11.5px var(--font-body); color: var(--fg); text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel), 0 0 2px var(--panel); white-space: nowrap; }
 #map.pop-labels .pop-mk .nm { display: block; }
+@keyframes pop-pulse { 0%, 100% { transform: rotate(45deg) scale(1); } 50% { transform: rotate(45deg) scale(2); } }
+#map.pop-pulse .pop-mk .dia { animation: pop-pulse 1.6s ease-in-out infinite; }
 .chip { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; border-radius: 10px; color: var(--pop-ink); }
 .chip.high { background: var(--pop-high); } .chip.med { background: var(--pop-med); } .chip.low { background: var(--pop-low); }
 .pop dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 8px 0; font-size: 12.5px; }
@@ -198,7 +200,7 @@ input[type="range"] { accent-color: var(--accent); }
   h1 { font-size: 26px; }
   .toast { right: 50px; left: 12px; max-width: none; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { *:not(.dia) { transition: none !important; animation: none !important; } }
 </style>
 
 <div class="app">
@@ -279,6 +281,7 @@ input[type="range"] { accent-color: var(--accent); }
       <div class="view-grid">
         <label class="switch" for="popShow"><input type="checkbox" id="popShow" checked> PoP markers</label>
         <label class="switch" for="popLabels"><input type="checkbox" id="popLabels"> Always label</label>
+        <label class="switch" for="popPulse"><input type="checkbox" id="popPulse" checked> Pulse PoPs</label>
         <label class="switch" for="ringMetro"><input type="checkbox" id="ringMetro" checked> <span id="metroLbl">Metro rings</span></label>
         <label class="switch" for="ringRegional"><input type="checkbox" id="ringRegional" checked> <span id="regLbl">Regional rings</span></label>
       </div>
@@ -623,6 +626,10 @@ const POPS = /*__POPS__*/;
   function updatePopLabels() { $("map").classList.toggle("pop-labels", $("popLabels").checked || map.getZoom() >= 5.6); }
   ["popShow", "ringMetro", "ringRegional"].forEach((id) => $(id).addEventListener("change", applyPopFilter));
   $("popLabels").addEventListener("change", updatePopLabels);
+  const setPulse = () => $("map").classList.toggle("pop-pulse", $("popPulse").checked);
+  $("popPulse").addEventListener("change", setPulse);
+  try { if (matchMedia("(prefers-reduced-motion: reduce)").matches) $("popPulse").checked = false; } catch (e) {}
+  setPulse();
   map.on("zoom", updatePopLabels);
 
   function addRingLayers() {
