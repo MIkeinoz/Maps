@@ -30,6 +30,13 @@ if args.pops:
     json.dump(pops, open(os.path.join(D, "pops.json"), "w"), indent=1)
     print("refreshed data/pops.json:", len(pops["points"]), "PoPs, version", pops["version"])
 pops = json.load(open(os.path.join(D, "pops.json")))
+popfile = os.path.join(D, "pop_population.json")  # from population.py (ABS figures)
+if os.path.exists(popfile):
+    popdata = json.load(open(popfile))
+    pops["population_sources"] = popdata["sources"]
+    for p in pops["points"]:
+        if p["id"] in popdata["pops"]:
+            p["population"] = popdata["pops"][p["id"]]
 
 CODES = {"Western Australia": "WA", "Northern Territory": "NT", "South Australia": "SA", "Queensland": "QLD",
          "New South Wales": "NSW", "Victoria": "VIC", "Tasmania": "TAS", "Australian Capital Territory": "ACT"}

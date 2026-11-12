@@ -134,6 +134,7 @@ input[type="range"] { accent-color: var(--accent); }
 .chip.high { background: var(--pop-high); } .chip.med { background: var(--pop-med); } .chip.low { background: var(--pop-low); }
 .pop dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 8px 0; font-size: 12.5px; }
 .pop dt { color: var(--muted); } .pop dd { margin: 0; }
+.pop .sm { color: var(--muted); font-size: 11.5px; }
 .drop { border: 1.5px dashed var(--line); border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
 .drop span { color: var(--muted); font-size: 12.5px; }
@@ -305,7 +306,7 @@ input[type="range"] { accent-color: var(--accent); }
       <p class="hint">Heights are exaggerated so the low Australian relief shows up. Streets and satellite load from the internet and need the page opened outside the Claude preview.</p>
     </section>
 
-    <p class="credits">Points of Presence: Green Light Priority 1 PoP master list (quoting plugin). Boundaries and towns: Natural Earth (public domain). Elevation: Mapzen Terrarium tiles via AWS Open Data, about 2.4 km per pixel at full detail.</p>
+    <p class="credits">Points of Presence: Green Light Priority 1 PoP master list (quoting plugin). Population: Australian Bureau of Statistics, Regional population 2024-25 and population grid 2025 (CC BY 4.0), and 2021 Census QuickStats. Boundaries and towns: Natural Earth (public domain). Elevation: Mapzen Terrarium tiles via AWS Open Data, about 2.4 km per pixel at full detail.</p>
   </aside>
 
   <main class="map-wrap">
@@ -512,12 +513,31 @@ const POPS = /*__POPS__*/;
     }
   });
 
+  // ---------- Markers that stay visible over 3D terrain ----------
+  // MapLibre fades markers it judges hidden behind terrain and then blocks their
+  // pop-ups; with exaggerated relief that judgement is unreliable, so markers keep
+  // full opacity and open their own pop-ups.
+  const KEEP_VISIBLE = { opacity: "1", opacityWhenCovered: "1" };
+  let openPopup = null;
+  function showPopup(popup, lngLat) {
+    if (openPopup && openPopup !== popup) openPopup.remove();
+    popup.setLngLat(lngLat).addTo(map); openPopup = popup;
+  }
+  function popupOnClick(el, popup, lngLat) {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (popup.isOpen()) popup.remove(); else showPopup(popup, lngLat());
+    });
+    el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.click(); } });
+    el.tabIndex = 0;
+  }
+
   // ---------- Towns ----------
   const cityMarkers = CITIES.map(([name, lon, lat, pop, cap]) => {
     const el = document.createElement("div");
     el.className = "city" + (cap ? " cap" : "");
     el.innerHTML = `<i></i>${esc(name)}`;
-    const mk = new maplibregl.Marker({ element: el, anchor: "left", offset: [-3, 0] }).setLngLat([lon, lat]);
+    const mk = new maplibregl.Marker({ element: el, anchor: "left", offset: [-3, 0], ...KEEP_VISIBLE }).setLngLat([lon, lat]);
     return { mk, pop, cap, on: false };
   });
   function updateCities() {
@@ -593,8 +613,19 @@ const POPS = /*__POPS__*/;
         <dt>Stretch SLA</dt><dd>${p.sla_stretch ? esc(p.sla_stretch) : "None"}</dd>
         <dt>Stretch rule</dt><dd>${esc(p.stretch_condition || "")}</dd>
         <dt>Location</dt><dd class="pin-coord">${fmtDec(p.lat, p.lng)}</dd>
-      </dl>
+      </dl>${popPopulationHtml(p)}
       <div class="hint" style="margin:0">PoP ID ${esc(p.id)}</div></div>`;
+  }
+  const fmtN = (n) => Number(n).toLocaleString("en-AU");
+  function popPopulationHtml(p) {
+    const q = p.population; if (!q) return "";
+    const t = q.town;
+    const town = t ? `${esc(t.name)}<br><b>${fmtN(t.population)}</b> <span class="sm">${esc(t.measure)}</span>${t.name.split(" - ")[0] !== p.name && !t.name.includes(p.name) ? `<br><span class="sm">${esc(p.name)} is part of this urban area</span>` : ""}` : "Not available";
+    return `<p class="label" style="margin:10px 0 4px"><span>Population</span></p><dl style="margin-top:0">
+        <dt>Town / city</dt><dd>${town}</dd>
+        <dt>Within ${METRO_KM} km</dt><dd><b>${fmtN(q.ring50)}</b></dd>
+        <dt>Within ${REG_KM} km</dt><dd><b>${fmtN(q.ring150)}</b></dd>
+      </dl><div class="hint" style="margin:0">ABS. Town: ${t && t.kind === "Urban Centre/Locality" ? "2021 Census, urban centre" : "estimated resident population by Significant Urban Area, 30 June 2025 (preliminary)"}. Rings: ABS population grid 2025, straight-line distance.</div>`;
   }
   const popMarkers = POPS.points.map((p) => {
     const el = document.createElement("div");
@@ -602,8 +633,10 @@ const POPS = /*__POPS__*/;
     el.setAttribute("role", "button");
     el.setAttribute("aria-label", `${p.name} PoP, ${p.casual_level} casual availability`);
     el.innerHTML = `<span class="dia"></span><span class="nm">${esc(p.name)}</span>`;
-    const mk = new maplibregl.Marker({ element: el, anchor: "left", offset: [-8, 0] })
-      .setLngLat([p.lng, p.lat]).setPopup(new maplibregl.Popup({ offset: 12, maxWidth: "300px" }).setHTML(popPopupHtml(p)));
+    const mk = new maplibregl.Marker({ element: el, anchor: "left", offset: [-8, 0], ...KEEP_VISIBLE }).setLngLat([p.lng, p.lat]);
+    el.setAttribute("aria-label", `${p.name} PoP, ${p.casual_level} casual availability`);
+    const popup = new maplibregl.Popup({ offset: [6, -6], maxWidth: "300px" }).setHTML(popPopupHtml(p));
+    popupOnClick(el, popup, () => [p.lng, p.lat]);
     return { p, mk, on: false };
   });
 
@@ -666,10 +699,10 @@ const POPS = /*__POPS__*/;
     el.className = "pin-marker";
     el.setAttribute("role", "button");
     el.setAttribute("aria-label", p.label || "Pin");
-    p.marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
-      .setLngLat([p.lon, p.lat])
-      .setPopup(new maplibregl.Popup({ offset: 34, maxWidth: "280px" }).setHTML(popupHtml(p)))
-      .addTo(map);
+    p.marker = new maplibregl.Marker({ element: el, anchor: "bottom", ...KEEP_VISIBLE }).setLngLat([p.lon, p.lat]).addTo(map);
+    el.setAttribute("aria-label", p.label || "Pin");
+    p.popup = new maplibregl.Popup({ offset: 34, maxWidth: "280px" }).setHTML(popupHtml(p));
+    popupOnClick(el, p.popup, () => [p.lon, p.lat]);
     paintMarker(p);
   }
 
@@ -693,8 +726,7 @@ const POPS = /*__POPS__*/;
 
   function flyTo(p) {
     map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 9), pitch: $("t3d").checked ? 55 : 0, duration: 1800, essential: true });
-    pins.forEach((q) => { if (q !== p && q.marker.getPopup().isOpen()) q.marker.togglePopup(); });
-    setTimeout(() => { if (!p.marker.getPopup().isOpen()) p.marker.togglePopup(); }, 1850);
+    setTimeout(() => { if (!p.popup.isOpen()) showPopup(p.popup, [p.lon, p.lat]); }, 1850);
   }
 
   function fitAll() {
@@ -719,14 +751,14 @@ const POPS = /*__POPS__*/;
       const nameEl = edit.parentElement.querySelector(".pin-name");
       nameEl.innerHTML = `<input class="rename" id="rename-${p.id}" value="${esc(p.label)}" placeholder="Pin name" aria-label="Pin name">`;
       const inp = nameEl.querySelector("input"); inp.focus(); inp.select();
-      const done = (save) => { if (save) { p.label = inp.value.trim(); p.example = false; p.marker.setPopup(new maplibregl.Popup({ offset: 34, maxWidth: "280px" }).setHTML(popupHtml(p))); } refreshAll(); };
+      const done = (save) => { if (save) { p.label = inp.value.trim(); p.example = false; p.popup.setHTML(popupHtml(p)); } refreshAll(); };
       inp.addEventListener("keydown", (k) => { if (k.key === "Enter") done(true); if (k.key === "Escape") done(false); });
       inp.addEventListener("blur", () => done(true), { once: true });
       return;
     }
     if (del) {
       const i = pins.findIndex((p) => p.id === +del.dataset.del);
-      if (i >= 0) { pins[i].marker.remove(); pins.splice(i, 1); refreshAll(); }
+      if (i >= 0) { pins[i].marker.remove(); pins[i].popup.remove(); pins.splice(i, 1); refreshAll(); }
     } else if (fly) {
       const p = pins.find((q) => q.id === +fly.dataset.fly); if (p) flyTo(p);
     }
@@ -779,7 +811,7 @@ const POPS = /*__POPS__*/;
   $("clearBtn").addEventListener("click", () => { $("clearConfirm").hidden = false; $("clearBtn").hidden = true; });
   $("clearNo").addEventListener("click", () => { $("clearConfirm").hidden = true; $("clearBtn").hidden = false; });
   $("clearYes").addEventListener("click", () => {
-    pins.forEach((p) => p.marker.remove()); pins = []; refreshAll();
+    pins.forEach((p) => { p.marker.remove(); p.popup.remove(); }); pins = []; refreshAll();
     $("clearConfirm").hidden = true; $("clearBtn").hidden = false; toast("Removed all pins");
   });
 
@@ -939,6 +971,7 @@ const POPS = /*__POPS__*/;
     const n = p.near;
     const extra = p.extra.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
     if (sitePopup) sitePopup.remove();
+    if (openPopup) openPopup.remove();
     sitePopup = new maplibregl.Popup({ offset: 10, maxWidth: "300px" }).setLngLat([p.lon, p.lat]).setHTML(`<div class="pop"><h3>${esc(p.name)}</h3>
       <div class="pin-coord">${fmtDec(p.lat, p.lon)}</div>
       <dl><dt>Nearest PoP</dt><dd><span class="chip ${LV[n.pop.casual_level]}">${esc(n.pop.casual_level)}</span> ${esc(n.pop.name)}</dd>

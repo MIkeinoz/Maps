@@ -30,7 +30,16 @@ Use **Upload Excel site list** (or drop a file on the page) to plot many sites a
 
 The 65 Green Light Priority 1 PoPs (quoting plugin master list, v3.0, effective 2026-09-26) are drawn as diamonds coloured by casual availability: green High (4hr committed, 2hr stretch), amber Medium (NBD committed, 4hr stretch), red Low (NBD committed, no stretch). Rings show the Metro (50 km) and Regional (150 km) thresholds as straight-line distances; the plugin's thresholds are road km, so real coverage is smaller. Each pin lists its nearest PoP, the straight-line distance and the Metro / Regional / Remote band, and Copy as CSV includes them.
 
+## PoP population figures
+
+Each PoP pop-up shows the population of the town or city it sits in and the number of people within its Metro (50 km) and Regional (150 km) rings. `tools/australia-map/population.py` downloads the ABS files and writes `data/pop_population.json`; rerun it when ABS publishes a new Regional population release (update the URLs at the top) or when the PoP list changes.
+
+- Town / city: ABS Regional population 2024-25, Table 2, estimated resident population by Significant Urban Area at 30 June 2025 (preliminary). The PoP is placed in an SUA by point-in-polygon on the ASGS Edition 3 (2021) SUA boundaries. A PoP outside every SUA (Berri) uses its 2021 Census Urban Centre/Locality count from ABS QuickStats. Outer-metro PoPs (e.g. Pakenham) show the whole capital-city figure.
+- Rings: sum of the ABS Australian population grid 2025 (1 km cells) whose centres lie within 50 km / 150 km in a straight line. Rings overlap, so ring totals cannot be added across PoPs.
+
 ## Data sources
+
+- `tools/australia-map/data/pop_population.json`: derived from ABS data (CC BY 4.0) by `population.py`.
 
 - `tools/australia-map/data/pops.json`: Green Light Priority 1 PoP master (quoting plugin), fields limited to location, casual level and SLA.
 

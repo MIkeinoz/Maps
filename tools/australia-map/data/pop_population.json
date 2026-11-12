@@ -1,0 +1,659 @@
+{
+ "sources": {
+  "town_sua": "ABS Regional population 2024-25, Table 2: ERP by Significant Urban Area, 30 June 2025 (preliminary)",
+  "town_ucl": "ABS 2021 Census QuickStats, Urban Centre/Locality (all persons)",
+  "rings": "ABS Australian population grid 2025 (1 km, ERP 30 June 2025), straight-line distance from the PoP"
+ },
+ "pops": {
+  "nsw-sydney": {
+   "ring50": 5153853,
+   "ring150": 6793028,
+   "town": {
+    "name": "Sydney",
+    "population": 5219674,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-melbourne": {
+   "ring50": 5192712,
+   "ring150": 6439303,
+   "town": {
+    "name": "Melbourne",
+    "population": 5328274,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-brisbane": {
+   "ring50": 2819306,
+   "ring150": 4423108,
+   "town": {
+    "name": "Brisbane",
+    "population": 2745086,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "wa-perth": {
+   "ring50": 2289784,
+   "ring150": 2539065,
+   "town": {
+    "name": "Perth",
+    "population": 2430757,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "sa-adelaide": {
+   "ring50": 1515385,
+   "ring150": 1681332,
+   "town": {
+    "name": "Adelaide",
+    "population": 1470938,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "act-canberra": {
+   "ring50": 557948,
+   "ring150": 852569,
+   "town": {
+    "name": "Canberra - Queanbeyan",
+    "population": 521049,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "tas-hobart": {
+   "ring50": 287916,
+   "ring150": 316005,
+   "town": {
+    "name": "Hobart",
+    "population": 233736,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nt-darwin": {
+   "ring50": 159981,
+   "ring150": 166332,
+   "town": {
+    "name": "Darwin",
+    "population": 145019,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-albury": {
+   "ring50": 143597,
+   "ring150": 426557,
+   "town": {
+    "name": "Albury - Wodonga",
+    "population": 102435,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nt-alice-springs": {
+   "ring50": 32304,
+   "ring150": 35231,
+   "town": {
+    "name": "Alice Springs",
+    "population": 30875,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-armidale": {
+   "ring50": 34760,
+   "ring150": 312185,
+   "town": {
+    "name": "Armidale",
+    "population": 24436,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "wa-australind-bunbury": {
+   "ring50": 143688,
+   "ring150": 1322796,
+   "town": {
+    "name": "Bunbury",
+    "population": 84332,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-bairnsdale": {
+   "ring50": 48774,
+   "ring150": 208582,
+   "town": {
+    "name": "Bairnsdale",
+    "population": 15917,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-ballarat": {
+   "ring50": 170580,
+   "ring150": 6171779,
+   "town": {
+    "name": "Ballarat",
+    "population": 120939,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-banora-point-tweed-heads": {
+   "ring50": 788641,
+   "ring150": 3841006,
+   "town": {
+    "name": "Gold Coast - Tweed Heads",
+    "population": 761634,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-bendigo": {
+   "ring50": 153930,
+   "ring150": 4690892,
+   "town": {
+    "name": "Bendigo",
+    "population": 106493,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "sa-berri": {
+   "ring50": 28581,
+   "ring150": 122912,
+   "town": {
+    "name": "Berri",
+    "population": 4143,
+    "measure": "2021 Census",
+    "kind": "Urban Centre/Locality"
+   }
+  },
+  "nsw-blue-mountains": {
+   "ring50": 564825,
+   "ring150": 6491341,
+   "town": {
+    "name": "Sydney",
+    "population": 5219674,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-broken-hill": {
+   "ring50": 17613,
+   "ring150": 18474,
+   "town": {
+    "name": "Broken Hill",
+    "population": 17515,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-bundaberg": {
+   "ring50": 108938,
+   "ring150": 292774,
+   "town": {
+    "name": "Bundaberg",
+    "population": 79283,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-cairns": {
+   "ring50": 214793,
+   "ring150": 277304,
+   "town": {
+    "name": "Cairns",
+    "population": 164149,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-cessnock": {
+   "ring50": 740792,
+   "ring150": 6395189,
+   "town": {
+    "name": "Newcastle - Maitland",
+    "population": 541634,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-coffs-harbour": {
+   "ring50": 112981,
+   "ring150": 333056,
+   "town": {
+    "name": "Coffs Harbour",
+    "population": 77244,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "tas-devonport": {
+   "ring50": 112366,
+   "ring150": 268873,
+   "town": {
+    "name": "Devonport",
+    "population": 32938,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-dubbo": {
+   "ring50": 60281,
+   "ring150": 196784,
+   "town": {
+    "name": "Dubbo",
+    "population": 42452,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-echuca": {
+   "ring50": 51718,
+   "ring150": 551044,
+   "town": {
+    "name": "Echuca - Moama",
+    "population": 23393,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-geelong": {
+   "ring50": 755353,
+   "ring150": 6228623,
+   "town": {
+    "name": "Geelong",
+    "population": 314381,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "wa-geraldton": {
+   "ring50": 45294,
+   "ring150": 54630,
+   "town": {
+    "name": "Geraldton",
+    "population": 42104,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-gladstone": {
+   "ring50": 60987,
+   "ring150": 221669,
+   "town": {
+    "name": "Gladstone",
+    "population": 48505,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-gosford": {
+   "ring50": 1725823,
+   "ring150": 6750142,
+   "town": {
+    "name": "Central Coast",
+    "population": 354189,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-goulburn": {
+   "ring50": 42659,
+   "ring150": 2777918,
+   "town": {
+    "name": "Goulburn",
+    "population": 25647,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-griffith": {
+   "ring50": 40783,
+   "ring150": 87901,
+   "town": {
+    "name": "Griffith",
+    "population": 20774,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-horsham": {
+   "ring50": 24172,
+   "ring150": 123476,
+   "town": {
+    "name": "Horsham",
+    "population": 16882,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-kirwan-townsville": {
+   "ring50": 206791,
+   "ring150": 250611,
+   "town": {
+    "name": "Townsville",
+    "population": 190551,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "tas-launceston": {
+   "ring50": 140289,
+   "ring150": 312629,
+   "town": {
+    "name": "Launceston",
+    "population": 92993,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-mackay": {
+   "ring50": 125462,
+   "ring150": 162274,
+   "town": {
+    "name": "Mackay",
+    "population": 89761,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "wa-mandurah": {
+   "ring50": 518487,
+   "ring150": 2672190,
+   "town": {
+    "name": "Perth",
+    "population": 2430757,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-maroochydore-sunshine-coast": {
+   "ring50": 520878,
+   "ring150": 3791410,
+   "town": {
+    "name": "Sunshine Coast",
+    "population": 424741,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-maryborough": {
+   "ring50": 125485,
+   "ring150": 747137,
+   "town": {
+    "name": "Maryborough",
+    "population": 28658,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-mildura": {
+   "ring50": 62423,
+   "ring150": 96652,
+   "town": {
+    "name": "Mildura - Buronga",
+    "population": 54379,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-morwell": {
+   "ring50": 149531,
+   "ring150": 4863724,
+   "town": {
+    "name": "Traralgon - Morwell",
+    "population": 44085,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "sa-mount-barker": {
+   "ring50": 1490597,
+   "ring150": 1665209,
+   "town": {
+    "name": "Adelaide",
+    "population": 1470938,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "sa-mount-gambier": {
+   "ring50": 47299,
+   "ring150": 111099,
+   "town": {
+    "name": "Mount Gambier",
+    "population": 30875,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "sa-murray-bridge": {
+   "ring50": 113694,
+   "ring150": 1663647,
+   "town": {
+    "name": "Murray Bridge",
+    "population": 19938,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-newcastle": {
+   "ring50": 767652,
+   "ring150": 6109722,
+   "town": {
+    "name": "Newcastle - Maitland",
+    "population": 541634,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-orange": {
+   "ring50": 100784,
+   "ring150": 366022,
+   "town": {
+    "name": "Orange",
+    "population": 43213,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "sa-port-lincoln": {
+   "ring50": 22015,
+   "ring150": 28791,
+   "town": {
+    "name": "Port Lincoln",
+    "population": 17064,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-port-macquarie": {
+   "ring50": 116100,
+   "ring150": 331573,
+   "town": {
+    "name": "Port Macquarie",
+    "population": 53369,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "sa-port-pirie": {
+   "ring50": 44794,
+   "ring150": 114863,
+   "town": {
+    "name": "Port Pirie",
+    "population": 14195,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-sale": {
+   "ring50": 72276,
+   "ring150": 511765,
+   "town": {
+    "name": "Sale",
+    "population": 15232,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-shepparton": {
+   "ring50": 103676,
+   "ring150": 1288622,
+   "town": {
+    "name": "Shepparton - Mooroopna",
+    "population": 55332,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-southport-gold-coast": {
+   "ring50": 1298426,
+   "ring150": 4179642,
+   "town": {
+    "name": "Gold Coast - Tweed Heads",
+    "population": 761634,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-taree": {
+   "ring50": 98929,
+   "ring150": 874258,
+   "town": {
+    "name": "Taree",
+    "population": 26858,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-toowoomba": {
+   "ring50": 219661,
+   "ring150": 3832059,
+   "town": {
+    "name": "Toowoomba",
+    "population": 153781,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-traralgon": {
+   "ring50": 128342,
+   "ring150": 4380546,
+   "town": {
+    "name": "Traralgon - Morwell",
+    "population": 44085,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-wagga-wagga": {
+   "ring50": 80870,
+   "ring150": 332576,
+   "town": {
+    "name": "Wagga Wagga",
+    "population": 58117,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-wallan": {
+   "ring50": 2760353,
+   "ring150": 6476282,
+   "town": {
+    "name": "Melbourne",
+    "population": 5328274,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-wangaratta": {
+   "ring50": 78852,
+   "ring150": 421456,
+   "town": {
+    "name": "Wangaratta",
+    "population": 20019,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-warragul": {
+   "ring50": 289529,
+   "ring150": 6081891,
+   "town": {
+    "name": "Warragul - Drouin",
+    "population": 47510,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-warrnambool": {
+   "ring50": 59165,
+   "ring150": 280869,
+   "town": {
+    "name": "Warrnambool",
+    "population": 36689,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-wollongong": {
+   "ring50": 949099,
+   "ring150": 6189106,
+   "town": {
+    "name": "Wollongong",
+    "population": 322343,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "nsw-oran-park": {
+   "ring50": 4855099,
+   "ring150": 6529424,
+   "town": {
+    "name": "Sydney",
+    "population": 5219674,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "qld-caboolture": {
+   "ring50": 1774543,
+   "ring150": 4371950,
+   "town": {
+    "name": "Brisbane",
+    "population": 2745086,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-mount-martha": {
+   "ring50": 2505520,
+   "ring150": 6265966,
+   "town": {
+    "name": "Melbourne",
+    "population": 5328274,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  },
+  "vic-pakenham": {
+   "ring50": 2735804,
+   "ring150": 6164985,
+   "town": {
+    "name": "Melbourne",
+    "population": 5328274,
+    "measure": "ERP 30 June 2025",
+    "kind": "Significant Urban Area"
+   }
+  }
+ }
+}
