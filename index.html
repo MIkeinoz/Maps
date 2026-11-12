@@ -136,7 +136,7 @@ input[type="range"] { accent-color: var(--accent); }
 .pop-mk .dia { width: 13px; height: 13px; transform: rotate(45deg); border: 2px solid var(--pop-ink); box-shadow: 0 1px 3px rgb(0 0 0 / .4); flex: none; }
 .pop-mk .nm { display: none; font: 600 11.5px var(--font-body); color: var(--fg); text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel), 0 0 2px var(--panel); white-space: nowrap; }
 #map.pop-labels .pop-mk .nm { display: block; }
-@keyframes pop-pulse { 0%, 100% { transform: rotate(45deg) scale(1); } 50% { transform: rotate(45deg) scale(2); } }
+@keyframes pop-pulse { 0%, 100% { transform: rotate(45deg) scale(1); } 50% { transform: rotate(45deg) scale(1.15); } }
 #map.pop-pulse .pop-mk .dia { animation: pop-pulse 1.6s ease-in-out infinite; }
 .chip { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; border-radius: 10px; color: var(--pop-ink); }
 .chip.high { background: var(--pop-high); } .chip.med { background: var(--pop-med); } .chip.low { background: var(--pop-low); }
