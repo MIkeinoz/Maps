@@ -16,6 +16,8 @@ Perth https://www.google.com/maps/@-31.95,115.86,12z
 
 ## Rebuild
 
+`--preload-sites list.csv` embeds a site list (name, lat, lng columns) in the `--fragment` page only, for the private Claude copy; the public `index.html` never contains it.
+
 ```
 python3 tools/australia-map/build.py [--fragment artifact.html] [--pops path/to/points_of_presence.yaml]
 ```
@@ -24,7 +26,7 @@ Needs Python 3 with Pillow (and PyYAML for `--pops`). `--pops` refreshes `data/p
 
 ## Upload a site list
 
-Use **Upload Excel site list** (or drop a file on the page) to plot many sites at once. Default columns: A = site name, B = longitude, C = latitude; a header row is skipped and the columns, sheet and name column can be changed after loading. Accepts .xlsx, .xlsm, .xls and .csv; decimal degrees or DMS text. Rows with latitude and longitude the wrong way round are swapped, and rows without valid coordinates are listed as skipped. Each site gets its nearest PoP, straight-line distance and Metro / Regional / Remote band, colour-coded by band or by the PoP's casual availability, and **Copy with nearest PoP** copies the results as CSV. The file is read in the browser (SheetJS 0.18.5 from cdnjs) and never uploaded; the last list is remembered in that browser only.
+Use **Upload Excel site list** (or drop a file on the page) to plot many sites at once. Default columns: A = site name, B = longitude, C = latitude; a header row is skipped and the columns, sheet and name column can be changed after loading. Accepts .xlsx, .xlsm, .xls and .csv; decimal degrees or DMS text. Rows with latitude and longitude the wrong way round are swapped, and rows without valid coordinates are listed as skipped. Columns are picked from the header row when it names them (name, lat, lng). Each site gets its nearest PoP and straight-line distance, colour-coded in four distance bands (up to 50 km, 50 to 100 km, 100 to 150 km, over 150 km) or by the PoP's casual availability, and **Copy with nearest PoP** copies the results as CSV. The file is read in the browser (SheetJS 0.18.5 from cdnjs) and never uploaded; the last list is remembered in that browser only.
 
 ## Points of Presence
 

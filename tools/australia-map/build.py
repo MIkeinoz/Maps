@@ -16,6 +16,7 @@ D = os.path.join(HERE, "data")
 ap = argparse.ArgumentParser()
 ap.add_argument("--fragment")
 ap.add_argument("--pops")
+ap.add_argument("--preload-sites", help="CSV with name, lat, lng columns; embedded in the --fragment page only")
 args = ap.parse_args()
 
 POP_FIELDS = ["id", "name", "region", "state", "postcode", "lat", "lng",
@@ -82,5 +83,14 @@ out = os.path.join(HERE, "..", "..", "index.html")
 open(out, "w").write(full)
 print("wrote", os.path.normpath(out), len(full) // 1024, "KB;", len(cities), "towns;", len(dem), "elevation tiles")
 if args.fragment:
+    if args.preload_sites:
+        import csv
+        rows = list(csv.DictReader(open(args.preload_sites, encoding="utf-8-sig")))
+        keep = ["state", "city", "postcode", "street", "phone", "services"]
+        sites = [{"name": r["name"], "lat": float(r["lat"]), "lon": float(r["lng"]), "row": i + 2,
+                  "extra": [[k.capitalize(), r[k]] for k in keep if r.get(k)]}
+                 for i, r in enumerate(rows) if r.get("lat") and r.get("lng")]
+        page = page.replace("/*__PRELOAD_SITES__*/null", json.dumps({"file": os.path.basename(args.preload_sites), "sites": sites}, separators=(",", ":")))
+        print("embedded", len(sites), "preloaded sites in the fragment")
     open(args.fragment, "w").write(page)
     print("wrote", args.fragment)

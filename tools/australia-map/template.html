@@ -19,9 +19,10 @@
   --pop-low: #c2362f;
   --pop-ink: #ffffff;
   --ring: #0d4f80;
-  --band-metro: #2b6fd6;    /* uploaded sites by distance band */
-  --band-reg: #0f9fa8;
-  --band-remote: #b5179e;
+  --band-50: #2563eb;       /* uploaded sites by straight-line distance to nearest PoP */
+  --band-100: #0891b2;
+  --band-150: #7c3aed;
+  --band-far: #d61f8c;
   --field: #ffffff;
   --sea: #b9d3dc;
   --land: #e7c9a0;
@@ -38,7 +39,7 @@
     --bg: #12171a; --panel: #182024; --fg: #e6e9e7; --muted: #93a1a6; --line: #2c373c;
     --accent: #8aa2ff; --accent-ink: #0b1230;
     --pop-high: #4cc27a; --pop-med: #f2b630; --pop-low: #ff7b72; --pop-ink: #0b0f10; --ring: #9fd3ff;
-    --band-metro: #7fb0ff; --band-reg: #3fd0d8; --band-remote: #f46fd9; --field: #0f1416;
+    --band-50: #7fb0ff; --band-100: #3fd0e8; --band-150: #b99cff; --band-far: #ff6fc4; --field: #0f1416;
     --sea: #0e2a36; --land: #6b4a30; --border-line: #e9c49a; --hill-shadow: #0a0604;
     --warn: #ffd27a; --warn-bg: #3a2c0c;
     color-scheme: dark;
@@ -48,7 +49,7 @@
   --bg: #12171a; --panel: #182024; --fg: #e6e9e7; --muted: #93a1a6; --line: #2c373c;
   --accent: #8aa2ff; --accent-ink: #0b1230;
     --pop-high: #4cc27a; --pop-med: #f2b630; --pop-low: #ff7b72; --pop-ink: #0b0f10; --ring: #9fd3ff;
-    --band-metro: #7fb0ff; --band-reg: #3fd0d8; --band-remote: #f46fd9; --field: #0f1416;
+    --band-50: #7fb0ff; --band-100: #3fd0e8; --band-150: #b99cff; --band-far: #ff6fc4; --field: #0f1416;
   --sea: #0e2a36; --land: #6b4a30; --border-line: #e9c49a; --hill-shadow: #0a0604;
   --warn: #ffd27a; --warn-bg: #3a2c0c;
   color-scheme: dark;
@@ -145,7 +146,7 @@ input[type="range"] { accent-color: var(--accent); }
 .bands { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
 .bchip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 2px 9px 2px 6px; font-size: 12px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--panel); box-shadow: 0 0 0 1px var(--line); flex: none; display: inline-block; }
-.dot.metro { background: var(--band-metro); } .dot.reg { background: var(--band-reg); } .dot.remote { background: var(--band-remote); }
+.dot.b50 { background: var(--band-50); } .dot.b100 { background: var(--band-100); } .dot.b150 { background: var(--band-150); } .dot.bfar { background: var(--band-far); }
 .dot.high { background: var(--pop-high); } .dot.med { background: var(--pop-med); } .dot.low { background: var(--pop-low); }
 .site-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-items: center; margin-bottom: 8px; }
 .site-tools input[type="search"] { grid-column: 1 / -1; width: 100%; padding: 6px 8px; background: var(--field); border: 1px solid var(--line); border-radius: 6px; }
@@ -246,7 +247,7 @@ input[type="range"] { accent-color: var(--accent); }
         <button class="btn primary" type="button" id="uploadBtn">Upload Excel site list</button>
         <span>or drop the file here</span>
       </div>
-      <p class="hint">Column A is the site name, column B longitude, column C latitude. A header row is skipped automatically, and you can change the columns after loading. The file is read in your browser and is not sent anywhere.</p>
+      <p class="hint">Column A is the site name, column B longitude, column C latitude, unless the header row names them (for example name, lat, lng). You can change the columns after loading. The file is read in your browser and is not sent anywhere.</p>
       <div id="sheetBox" hidden>
         <div class="file-name" id="fileName"></div>
         <div class="col-map">
@@ -333,7 +334,7 @@ const POPS = /*__POPS__*/;
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const STORE_KEY = "aus-pin-map.v1";
+  const STORE_KEY = "aus-pin-map.v2";
   const AUS = { w: 112, e: 154.5, s: -44.5, n: -9 };
 
   // ---------- Storage (best effort) ----------
@@ -343,14 +344,7 @@ const POPS = /*__POPS__*/;
   }
   function savePins() { try { localStorage.setItem(STORE_KEY, JSON.stringify(pins)); } catch (e) {} }
 
-  const EXAMPLES = [
-    { lat: -33.8568, lon: 151.2153, label: "Sydney Opera House", example: true },
-    { lat: -25.3444, lon: 131.0369, label: "Uluru", example: true },
-    { lat: -36.4559, lon: 148.2633, label: "Mt Kosciuszko", example: true },
-    { lat: -41.6848, lon: 145.9511, label: "Cradle Mountain", example: true },
-    { lat: -17.9614, lon: 122.2359, label: "Broome", example: true }
-  ];
-  let pins = loadPins() || EXAMPLES.slice();
+  let pins = loadPins() || [];
   let nextId = 1;
   pins.forEach((p) => { p.id = nextId++; });
 
@@ -850,10 +844,16 @@ const POPS = /*__POPS__*/;
   }
 
   // ---------- Site list upload (Excel / CSV) ----------
-  const SITE_KEY = "aus-pin-map.sites.v1";
+  const SITE_KEY = "aus-pin-map.sites.v2";
+  const PRELOAD_SITES = /*__PRELOAD_SITES__*/null;
   const XLSX_URL = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
   let xlsxReady = null, workbook = null, sites = [], siteFile = "";
-  const BAND_CLS = { Metro: "metro", Regional: "reg", Remote: "remote" };
+  const SITE_BANDS = [
+    { max: 50, label: "Up to 50 km", cls: "b50", tok: "--band-50" },
+    { max: 100, label: "50 to 100 km", cls: "b100", tok: "--band-100" },
+    { max: 150, label: "100 to 150 km", cls: "b150", tok: "--band-150" },
+    { max: Infinity, label: "Over 150 km", cls: "bfar", tok: "--band-far" }];
+  const siteBand = (km) => SITE_BANDS.find((b) => km <= b.max);
 
   function loadXlsx() {
     if (window.XLSX) return Promise.resolve();
@@ -899,7 +899,9 @@ const POPS = /*__POPS__*/;
     const width = Math.max(3, ...rows.slice(0, 200).map((r) => r.length));
     const head = rows[0] || [];
     const opts = Array.from({ length: width }, (_, i) => `<option value="${i}">${colLetter(i)}${head[i] != null && typeof head[i] === "string" ? " · " + esc(String(head[i]).slice(0, 18)) : ""}</option>`).join("");
-    const keep = reset ? [0, 1, 2] : [$("colName").value, $("colLon").value, $("colLat").value].map(Number);
+    const find = (re, d) => { const i = head.findIndex((h) => typeof h === "string" && re.test(h.trim())); return i >= 0 ? i : d; };
+    const keep = reset ? [find(/^(site|site ?name|name|location|store)$/i, 0), find(/^(lng|lon|long|longitude|x)$/i, 1), find(/^(lat|latitude|y)$/i, 2)]
+      : [$("colName").value, $("colLon").value, $("colLat").value].map(Number);
     ["colName", "colLon", "colLat"].forEach((id, k) => { $(id).innerHTML = opts; $(id).value = String(Math.min(keep[k], width - 1)); });
   }
 
@@ -945,7 +947,7 @@ const POPS = /*__POPS__*/;
   }
   function siteColour(p) {
     if ($("siteColour").value === "avail") return css({ High: "--pop-high", Medium: "--pop-med", Low: "--pop-low" }[p.near.pop.casual_level]);
-    return css({ Metro: "--band-metro", Regional: "--band-reg", Remote: "--band-remote" }[p.near.band]);
+    return css(siteBand(p.near.km).tok);
   }
   function updateSiteLayer() {
     const src = map.getSource && map.getSource("sites"); if (!src) return;
@@ -975,7 +977,7 @@ const POPS = /*__POPS__*/;
     sitePopup = new maplibregl.Popup({ offset: 10, maxWidth: "300px" }).setLngLat([p.lon, p.lat]).setHTML(`<div class="pop"><h3>${esc(p.name)}</h3>
       <div class="pin-coord">${fmtDec(p.lat, p.lon)}</div>
       <dl><dt>Nearest PoP</dt><dd><span class="chip ${LV[n.pop.casual_level]}">${esc(n.pop.casual_level)}</span> ${esc(n.pop.name)}</dd>
-      <dt>Distance</dt><dd>${kmTxt(n.km)} straight line</dd><dt>Band</dt><dd><b>${n.band}</b></dd>${extra}
+      <dt>Distance</dt><dd>${kmTxt(n.km)} straight line</dd><dt>Distance band</dt><dd><i class="dot ${siteBand(n.km).cls}"></i> <b>${siteBand(n.km).label}</b> (${n.band})</dd>${extra}
       <dt>Source</dt><dd>${esc(siteFile)}, row ${p.row}</dd></dl></div>`).addTo(map);
   }
   function renderSites() {
@@ -984,15 +986,15 @@ const POPS = /*__POPS__*/;
     if (!sites.length) return;
     const mode = $("siteColour").value;
     const groups = mode === "avail" ? LEVELS.map((l) => [l + " PoP", LV[l], sites.filter((p) => p.near.pop.casual_level === l).length])
-      : ["Metro", "Regional", "Remote"].map((b) => [b, BAND_CLS[b], sites.filter((p) => p.near.band === b).length]);
+      : SITE_BANDS.map((b) => [b.label, b.cls, sites.filter((p) => siteBand(p.near.km) === b).length]);
     $("bandChips").innerHTML = groups.map(([t, c, n]) => `<span class="bchip"><i class="dot ${c}"></i>${t} <b>${n}</b></span>`).join("");
     const q = $("siteFilter").value.trim().toLowerCase();
     const match = sites.map((p, i) => [p, i]).filter(([p]) => !q || p.name.toLowerCase().includes(q) || p.near.pop.name.toLowerCase().includes(q));
     const LIMIT = 400;
     $("siteList").innerHTML = match.slice(0, LIMIT).map(([p, i]) => {
-      const c = mode === "avail" ? LV[p.near.pop.casual_level] : BAND_CLS[p.near.band];
+      const c = mode === "avail" ? LV[p.near.pop.casual_level] : siteBand(p.near.km).cls;
       return `<li data-site="${i}"><i class="dot ${c}"></i><div style="min-width:0"><div class="nm">${esc(p.name)}</div>
-        <div class="sm">${p.near.band} · ${esc(p.near.pop.name)} ${kmTxt(p.near.km)}</div></div></li>`;
+        <div class="sm">${esc(p.near.pop.name)} PoP · ${kmTxt(p.near.km)}</div></div></li>`;
     }).join("") + (match.length > LIMIT ? `<li class="more">Showing ${LIMIT} of ${match.length}. Type in Find a site to narrow the list.</li>` : "")
       + (!match.length ? `<li class="more">No sites match “${esc(q)}”.</li>` : "");
   }
@@ -1017,17 +1019,19 @@ const POPS = /*__POPS__*/;
   $("siteFit").addEventListener("click", fitSites);
   $("siteClear").addEventListener("click", () => {
     sites = []; workbook = null; siteFile = ""; $("sheetBox").hidden = true; siteMsg("");
-    try { localStorage.removeItem(SITE_KEY); } catch (e) {}
+    try { localStorage.setItem(SITE_KEY, JSON.stringify({ file: "", sites: [] })); } catch (e) {}
     if (sitePopup) sitePopup.remove();
     updateSiteLayer(); renderSites(); toast("Removed the site list");
   });
   $("siteCopy").addEventListener("click", () => {
     const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
-    const csv = "site,longitude,latitude,nearest_pop,casual_availability,straight_line_km,band\n" + sites.map((p) =>
-      [q(p.name), p.lon, p.lat, q(p.near.pop.name), p.near.pop.casual_level, p.near.km.toFixed(1), p.near.band].join(",")).join("\n");
+    const csv = "site,longitude,latitude,nearest_pop,casual_availability,straight_line_km,distance_band,metro_regional_remote\n" + sites.map((p) =>
+      [q(p.name), p.lon, p.lat, q(p.near.pop.name), p.near.pop.casual_level, p.near.km.toFixed(1), q(siteBand(p.near.km).label), p.near.band].join(",")).join("\n");
     copyText(csv, () => toast(`Copied ${sites.length} sites with nearest PoP`));
   });
   function restoreSites() {
+    let saved = null; try { saved = localStorage.getItem(SITE_KEY); } catch (e) {}
+    if (!saved && PRELOAD_SITES) { setSites(PRELOAD_SITES.sites.map((p) => ({ ...p })), PRELOAD_SITES.file); $("fileName").textContent = PRELOAD_SITES.file; return; }
     try { const raw = localStorage.getItem(SITE_KEY); if (!raw) return; const d = JSON.parse(raw); if (d && d.sites && d.sites.length) { setSites(d.sites, d.file); $("fileName").textContent = d.file + " (saved in this browser)"; } } catch (e) {}
   }
 
